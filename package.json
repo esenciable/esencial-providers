@@ -1,0 +1,9 @@
+{
+  "name": "esencial-providers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nuvio scraper providers for the Latino catalog (HackStore, LaMovie and friends).",
+  "dependencies": {
+    "crypto-js": "^4.2.0"
+  }
+}
