@@ -3,6 +3,8 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 
 const CASES = [
+  ['magis', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
+  ['magis', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
   ['hackstore', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
   ['lamovie', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
   ['sololatino', 'tt2380307', 'movie', undefined, undefined, 'Coco'],

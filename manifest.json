@@ -1,5 +1,26 @@
 [
   {
+    "id": "magis",
+    "name": "Magis VOD",
+    "description": "Películas y series de Magis con sesión anónima de dispositivo. URLs directas del CDN.",
+    "version": "1.0.0",
+    "author": "esencialplay",
+    "supportedTypes": [
+      "movie",
+      "tv"
+    ],
+    "filename": "providers/magis.js",
+    "enabled": true,
+    "contentLanguage": [
+      "es"
+    ],
+    "formats": [
+      "mp4",
+      "ts"
+    ],
+    "supportsExternalPlayer": true
+  },
+  {
     "id": "hackstore",
     "name": "HackStore",
     "description": "Películas y series de HackStore (API nativa). URLs directas del CDN con headers.",
