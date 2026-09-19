@@ -1,47 +1,11 @@
 "use strict";
-var __defProp = Object.defineProperty;
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getOwnPropSymbols = Object.getOwnPropertySymbols;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __propIsEnum = Object.prototype.propertyIsEnumerable;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __spreadValues = (a, b) => {
-  for (var prop in b || (b = {}))
-    if (__hasOwnProp.call(b, prop))
-      __defNormalProp(a, prop, b[prop]);
-  if (__getOwnPropSymbols)
-    for (var prop of __getOwnPropSymbols(b)) {
-      if (__propIsEnum.call(b, prop))
-        __defNormalProp(a, prop, b[prop]);
-    }
-  return a;
-};
 var __commonJS = (cb, mod) => function __require() {
   try {
     return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
   } catch (e) {
     throw mod = 0, e;
   }
-};
-var __async = (__this, __arguments, generator) => {
-  return new Promise((resolve, reject) => {
-    var fulfilled = (value) => {
-      try {
-        step(generator.next(value));
-      } catch (e) {
-        reject(e);
-      }
-    };
-    var rejected = (value) => {
-      try {
-        step(generator.throw(value));
-      } catch (e) {
-        reject(e);
-      }
-    };
-    var step = (x) => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
-    step((generator = generator.apply(__this, __arguments)).next());
-  });
 };
 
 // (disabled):crypto
@@ -6730,64 +6694,63 @@ var MagisPortalClient = class {
     if (this.workingTransport === void 0) return [...TRANSPORTS];
     return [...TRANSPORTS].sort((a, b) => a.name === this.workingTransport ? -1 : b.name === this.workingTransport ? 1 : 0);
   }
-  call(_0) {
-    return __async(this, arguments, function* (path, bean = {}, session2 = {}, baseFields = true) {
-      var _a, _b, _c, _d;
-      const body = __spreadValues(__spreadValues(__spreadValues({}, baseFields ? { portalCode: "masnew", userId: (_a = session2.userId) != null ? _a : "", userToken: (_b = session2.userToken) != null ? _b : "" } : {}), bean), this.deviceFields((_c = session2.sn) != null ? _c : ""));
-      const plain = JSON.stringify(body);
-      yield this.waitTurn();
-      const attempts = [];
-      let lastError = null;
-      outer:
-        for (const host of this.hostOrder()) {
-          for (const transport of this.transportOrder()) {
-            try {
-              const response = yield fetchWithTimeout(`https://${host}/api/portalCore/${path}`, {
-                method: "POST",
-                // Header keys use exact casing: Nuvio's FetchBridge checks for
-                // "User-Agent" case-sensitively and injects a Mozilla default when
-                // it does not find it.
-                // apkVer MUST stay 43404: empirically the portal rejects newer
-                // versions in this header with portal200001 ("version
-                // discontinued") — verified 2026-09-18.
-                headers: transport.headers(APP_ID),
-                body: transport.wire(this.crypto, plain)
-              });
-              const json = yield response.json();
-              const returnCode = typeof json.returnCode === "string" ? json.returnCode : "";
-              if (returnCode !== "" && returnCode !== "0") {
-                attempts.push(`${host}/${transport.name}:${returnCode}`);
-                lastError = new MagisPortalError(returnCode, `path=${path} host=${host} via=${transport.name}${typeof json.errorMessage === "string" ? `: ${json.errorMessage}` : ""}`);
-                if (returnCode === "1") continue;
-                continue outer;
-              }
-              this.preferredHost = host;
-              this.workingTransport = transport.name;
-              const data = typeof json.data === "string" ? json.data : "";
-              if (data === "") return json;
-              return JSON.parse(this.crypto.decryptBlob(data));
-            } catch (error) {
-              if (error instanceof MagisPortalError) throw error;
-              attempts.push(`${host}/${transport.name}:network`);
-              lastError = error;
+  async call(path, bean = {}, session2 = {}, baseFields = true) {
+    const body = {
+      ...baseFields ? { portalCode: "masnew", userId: session2.userId ?? "", userToken: session2.userToken ?? "" } : {},
+      ...bean,
+      ...this.deviceFields(session2.sn ?? "")
+    };
+    const plain = JSON.stringify(body);
+    await this.waitTurn();
+    const attempts = [];
+    let lastError = null;
+    outer:
+      for (const host of this.hostOrder()) {
+        for (const transport of this.transportOrder()) {
+          try {
+            const response = await fetchWithTimeout(`https://${host}/api/portalCore/${path}`, {
+              method: "POST",
+              // Header keys use exact casing: Nuvio's FetchBridge checks for
+              // "User-Agent" case-sensitively and injects a Mozilla default when
+              // it does not find it.
+              // apkVer MUST stay 43404: empirically the portal rejects newer
+              // versions in this header with portal200001 ("version
+              // discontinued") — verified 2026-09-18.
+              headers: transport.headers(APP_ID),
+              body: transport.wire(this.crypto, plain)
+            });
+            const json = await response.json();
+            const returnCode = typeof json.returnCode === "string" ? json.returnCode : "";
+            if (returnCode !== "" && returnCode !== "0") {
+              attempts.push(`${host}/${transport.name}:${returnCode}`);
+              lastError = new MagisPortalError(returnCode, `path=${path} host=${host} via=${transport.name}${typeof json.errorMessage === "string" ? `: ${json.errorMessage}` : ""}`);
+              if (returnCode === "1") continue;
+              continue outer;
             }
+            this.preferredHost = host;
+            this.workingTransport = transport.name;
+            const data = typeof json.data === "string" ? json.data : "";
+            if (data === "") return json;
+            return JSON.parse(this.crypto.decryptBlob(data));
+          } catch (error) {
+            if (error instanceof MagisPortalError) throw error;
+            attempts.push(`${host}/${transport.name}:network`);
+            lastError = error;
           }
         }
-      const trace = attempts.length > 0 ? ` [${attempts.join(", ")}]` : "";
-      throw new Error(`Magis portal unavailable: ${lastError ? String((_d = lastError.message) != null ? _d : lastError) : "unknown"}${trace}`);
-    });
+      }
+    const trace = attempts.length > 0 ? ` [${attempts.join(", ")}]` : "";
+    throw new Error(`Magis portal unavailable: ${lastError ? String(lastError.message ?? lastError) : "unknown"}${trace}`);
   }
-  waitTurn() {
-    return __async(this, null, function* () {
-      const previous = this.queueTail;
-      let release;
-      this.queueTail = new Promise((resolve) => {
-        release = resolve;
-      });
-      yield previous;
-      yield sleep(400);
-      release();
+  async waitTurn() {
+    const previous = this.queueTail;
+    let release;
+    this.queueTail = new Promise((resolve) => {
+      release = resolve;
     });
+    await previous;
+    await sleep(400);
+    release();
   }
   hostOrder() {
     return this.preferredHost === null ? [...HOSTS] : [this.preferredHost, ...HOSTS.filter((host) => host !== this.preferredHost)];
@@ -6817,76 +6780,68 @@ var MagisSession = class {
     this.portal = portal2;
     this.state = null;
   }
-  ensure(account) {
-    return __async(this, null, function* () {
-      if (this.state !== null) return this.state;
-      if (!account.username || !account.password) return this.activateAnonymous();
-      return this.login(account);
-    });
+  async ensure(account) {
+    if (this.state !== null) return this.state;
+    if (!account.username || !account.password) return this.activateAnonymous();
+    return this.login(account);
   }
-  activateAnonymous() {
-    return __async(this, null, function* () {
-      const snTokenRes = yield this.portal.call("v3/snToken", {
-        hardwareInfo: "ranchu",
-        model: "sdk_gphone64_arm64",
-        product: "sdk_gphone64_arm64",
-        cpu: "arm64-v8a"
-      }, {}, false);
-      const snToken = stringValue(snTokenRes.snToken);
-      if (snToken === "") throw new Error("Magis portal returned no snToken");
-      const sn = (stringValue(snTokenRes.sn) || md5Hex(snToken + "ntFT65w6itH!lHCPw7D=@qnsFC5adD28")).toLowerCase();
-      const response = yield this.portal.call("v8/active", {
-        snToken,
-        authVersion: "",
-        authCode: "",
-        preCode: "",
-        macAddr: "02:00:00:00:00:00",
-        reserve1: "",
-        openNum: 4,
-        channel: "default",
-        matadata: "",
-        signdata: ""
-      }, { sn }, false);
-      const state = { userId: stringValue(response.userId), userToken: stringValue(response.userToken) };
-      if (state.userId === "" || state.userToken === "") throw new Error("Magis anonymous activation returned no session");
-      this.state = state;
-      return state;
-    });
+  async activateAnonymous() {
+    const snTokenRes = await this.portal.call("v3/snToken", {
+      hardwareInfo: "ranchu",
+      model: "sdk_gphone64_arm64",
+      product: "sdk_gphone64_arm64",
+      cpu: "arm64-v8a"
+    }, {}, false);
+    const snToken = stringValue(snTokenRes.snToken);
+    if (snToken === "") throw new Error("Magis portal returned no snToken");
+    const sn = (stringValue(snTokenRes.sn) || md5Hex(snToken + "ntFT65w6itH!lHCPw7D=@qnsFC5adD28")).toLowerCase();
+    const response = await this.portal.call("v8/active", {
+      snToken,
+      authVersion: "",
+      authCode: "",
+      preCode: "",
+      macAddr: "02:00:00:00:00:00",
+      reserve1: "",
+      openNum: 4,
+      channel: "default",
+      matadata: "",
+      signdata: ""
+    }, { sn }, false);
+    const state = { userId: stringValue(response.userId), userToken: stringValue(response.userToken) };
+    if (state.userId === "" || state.userToken === "") throw new Error("Magis anonymous activation returned no session");
+    this.state = state;
+    return state;
   }
-  login(account) {
-    return __async(this, null, function* () {
-      if (!account.username || !account.password) return this.activateAnonymous();
-      const hashedPassword = md5Hex(`${account.password}cloudstream`);
-      const response = yield this.portal.call("v8/login", {
-        accountType: "2",
-        userName: account.username,
-        password: hashedPassword,
-        type: "1",
-        macAddr: "02:00:00:00:00:00",
-        areaCode: "",
-        verificationCode: "",
-        verificationToken: "",
-        matadata: "",
-        signdata: "",
-        channel: "default"
-      }, {}, false);
-      const state = { userId: stringValue(response.userId), userToken: stringValue(response.userToken) };
-      if (state.userId === "" || state.userToken === "") throw new Error("Magis login returned no session");
-      this.state = state;
-      return state;
-    });
+  async login(account) {
+    if (!account.username || !account.password) return this.activateAnonymous();
+    const hashedPassword = md5Hex(`${account.password}cloudstream`);
+    const response = await this.portal.call("v8/login", {
+      accountType: "2",
+      userName: account.username,
+      password: hashedPassword,
+      type: "1",
+      macAddr: "02:00:00:00:00:00",
+      areaCode: "",
+      verificationCode: "",
+      verificationToken: "",
+      matadata: "",
+      signdata: "",
+      channel: "default"
+    }, {}, false);
+    const state = { userId: stringValue(response.userId), userToken: stringValue(response.userToken) };
+    if (state.userId === "" || state.userToken === "") throw new Error("Magis login returned no session");
+    this.state = state;
+    return state;
   }
-  withValidSession(account, action) {
-    return __async(this, null, function* () {
-      const current = yield this.ensure(account);
-      try {
-        return yield action(current);
-      } catch (error) {
-        if (!(error instanceof MagisPortalError)) throw error;
-        const refreshed = yield this.login(account);
-        return action(refreshed);
-      }
-    });
+  async withValidSession(account, action) {
+    const current = await this.ensure(account);
+    try {
+      return await action(current);
+    } catch (error) {
+      if (!(error instanceof MagisPortalError)) throw error;
+      const refreshed = await this.login(account);
+      return action(refreshed);
+    }
   }
 };
 var MagisResolver = class {
@@ -6895,61 +6850,57 @@ var MagisResolver = class {
     this.session = session2;
     this.slb = null;
   }
-  resolveVod(account, contentId, seriesContentId = "") {
-    return __async(this, null, function* () {
-      const play = yield this.session.withValidSession(account, (session2) => this.portal.call("v10/startPlayVOD", {
-        contentId,
-        seriesContentId,
-        startTime: 0,
-        type: "1",
-        columnId: 0,
-        authType: ""
-      }, session2));
-      const episode = objectAt(play.episodeList, 0);
-      const media = this.bestMedia(episode);
-      if (media === null) throw new Error("Magis returned no playable media");
-      const license = stringValue(objectAt(media.licenseList, 0).license);
-      if (license === "") throw new Error("Magis returned no media license");
-      const slb = yield this.session.withValidSession(account, (session2) => this.sessionSlb(session2.userToken, session2));
-      const cdn = this.vodCdn(slb);
-      if (cdn === null) throw new Error("Magis returned no VOD CDN");
-      const container = stringValue(media.videoFormat).toLowerCase();
-      const extension = container === "ts" ? "ts" : "mp4";
-      const resolvedContentId = stringValue(media.contentId) || contentId;
-      return {
-        url: `${cdn.base}/vod/${resolvedContentId}_media.${extension}`,
-        headers: {
-          "Content-Auth": cdn.auth,
-          "Content-License": license,
-          "User-Agent": "Ranger/4.9.4-17294ac0",
-          App: APP_ID,
-          "App-Version": APK_VERSION
-        },
-        mime: extension === "ts" ? "video/mp2t" : "video/mp4"
-      };
-    });
+  async resolveVod(account, contentId, seriesContentId = "") {
+    const play = await this.session.withValidSession(account, (session2) => this.portal.call("v10/startPlayVOD", {
+      contentId,
+      seriesContentId,
+      startTime: 0,
+      type: "1",
+      columnId: 0,
+      authType: ""
+    }, session2));
+    const episode = objectAt(play.episodeList, 0);
+    const media = this.bestMedia(episode);
+    if (media === null) throw new Error("Magis returned no playable media");
+    const license = stringValue(objectAt(media.licenseList, 0).license);
+    if (license === "") throw new Error("Magis returned no media license");
+    const slb = await this.session.withValidSession(account, (session2) => this.sessionSlb(session2.userToken, session2));
+    const cdn = this.vodCdn(slb);
+    if (cdn === null) throw new Error("Magis returned no VOD CDN");
+    const container = stringValue(media.videoFormat).toLowerCase();
+    const extension = container === "ts" ? "ts" : "mp4";
+    const resolvedContentId = stringValue(media.contentId) || contentId;
+    return {
+      url: `${cdn.base}/vod/${resolvedContentId}_media.${extension}`,
+      headers: {
+        "Content-Auth": cdn.auth,
+        "Content-License": license,
+        "User-Agent": "Ranger/4.9.4-17294ac0",
+        App: APP_ID,
+        "App-Version": APK_VERSION
+      },
+      mime: extension === "ts" ? "video/mp2t" : "video/mp4"
+    };
   }
-  sessionSlb(tokenOwner, session2) {
-    return __async(this, null, function* () {
-      if (this.slb !== null && this.slb.tokenOwner === tokenOwner && this.slb.expiresAt > Date.now()) {
-        return this.slb.data;
-      }
-      const data = yield this.portal.call("v14/getSlbInfo", {
-        hasPay: "0",
-        userIdentity: "1",
-        type: "merge",
-        appVer: APK_VERSION,
-        lang: "es",
-        encMediaSupported: 1,
-        liveCodeList: ["masnew_live"],
-        appParams: "",
-        reserve1: "02:00:00:00:00:00",
-        pipFlag: "0"
-      }, session2);
-      const ttl = numberValue(data.invalidTime) || 300;
-      this.slb = { tokenOwner, expiresAt: Date.now() + ttl * 1e3 - 3e5, data };
-      return data;
-    });
+  async sessionSlb(tokenOwner, session2) {
+    if (this.slb !== null && this.slb.tokenOwner === tokenOwner && this.slb.expiresAt > Date.now()) {
+      return this.slb.data;
+    }
+    const data = await this.portal.call("v14/getSlbInfo", {
+      hasPay: "0",
+      userIdentity: "1",
+      type: "merge",
+      appVer: APK_VERSION,
+      lang: "es",
+      encMediaSupported: 1,
+      liveCodeList: ["masnew_live"],
+      appParams: "",
+      reserve1: "02:00:00:00:00:00",
+      pipFlag: "0"
+    }, session2);
+    const ttl = numberValue(data.invalidTime) || 300;
+    this.slb = { tokenOwner, expiresAt: Date.now() + ttl * 1e3 - 3e5, data };
+    return data;
   }
   bestMedia(episode) {
     const candidates = [];
@@ -6979,31 +6930,29 @@ function scoreMedia(media) {
 function isCfl(value) {
   return value.split("&").some((part) => part.trim() === "sign_type=cfl");
 }
-function tmdbTitleFor(id, type) {
-  return __async(this, null, function* () {
-    const isTmdb = id.startsWith("tmdb:") || /^\d+$/.test(id);
-    const tmdbId = id.startsWith("tmdb:") ? id.split(":")[1] : id;
-    const endpoint = isTmdb ? `https://api.themoviedb.org/3/${type === "movie" ? "movie" : "tv"}/${encodeURIComponent(tmdbId)}` : `https://api.themoviedb.org/3/find/${encodeURIComponent(id)}?external_source=imdb_id`;
-    const url = `${endpoint}${endpoint.includes("?") ? "&" : "?"}api_key=${encodeURIComponent(TMDB_API_KEY)}&language=es-MX`;
-    let json;
-    try {
-      const response = yield fetchWithTimeout(url, {}, 1e4);
-      if (!response.ok) return null;
-      json = yield response.json();
-    } catch (e) {
-      return null;
-    }
-    let detail = json;
-    if (!isTmdb) {
-      const key = type === "movie" ? "movie_results" : "tv_results";
-      detail = Array.isArray(json[key]) && typeof json[key][0] === "object" && json[key][0] !== null ? json[key][0] : null;
-      if (detail === null) return null;
-    }
-    const title = stringValue(detail[type === "movie" ? "title" : "name"]);
-    const originalTitle = stringValue(detail[type === "movie" ? "original_title" : "original_name"]);
-    if (title === "" && originalTitle === "") return null;
-    return { title: title || originalTitle, originalTitle: originalTitle || title };
-  });
+async function tmdbTitleFor(id, type) {
+  const isTmdb = id.startsWith("tmdb:") || /^\d+$/.test(id);
+  const tmdbId = id.startsWith("tmdb:") ? id.split(":")[1] : id;
+  const endpoint = isTmdb ? `https://api.themoviedb.org/3/${type === "movie" ? "movie" : "tv"}/${encodeURIComponent(tmdbId)}` : `https://api.themoviedb.org/3/find/${encodeURIComponent(id)}?external_source=imdb_id`;
+  const url = `${endpoint}${endpoint.includes("?") ? "&" : "?"}api_key=${encodeURIComponent(TMDB_API_KEY)}&language=es-MX`;
+  let json;
+  try {
+    const response = await fetchWithTimeout(url, {}, 1e4);
+    if (!response.ok) return null;
+    json = await response.json();
+  } catch {
+    return null;
+  }
+  let detail = json;
+  if (!isTmdb) {
+    const key = type === "movie" ? "movie_results" : "tv_results";
+    detail = Array.isArray(json[key]) && typeof json[key][0] === "object" && json[key][0] !== null ? json[key][0] : null;
+    if (detail === null) return null;
+  }
+  const title = stringValue(detail[type === "movie" ? "title" : "name"]);
+  const originalTitle = stringValue(detail[type === "movie" ? "original_title" : "original_name"]);
+  if (title === "" && originalTitle === "") return null;
+  return { title: title || originalTitle, originalTitle: originalTitle || title };
 }
 var SERIES_TYPES = /* @__PURE__ */ new Set(["teleplay", "series", "variety"]);
 function portalQuery(title) {
@@ -7014,21 +6963,19 @@ function uniqueTitles(...titles) {
   return [...new Set(titles.map((t) => t.trim()).filter(Boolean))];
 }
 function searchItems(response) {
-  var _a;
   const direct = objects(response.searchItem);
   if (direct.length > 0) return direct;
   const grouped = objects(response.searchItemList).flatMap((group) => objects(group.itemList));
   if (grouped.length > 0) return grouped;
-  return objects((_a = response.assetList) != null ? _a : response.list);
+  return objects(response.assetList ?? response.list);
 }
 function tokens(value) {
-  var _a;
   let normalized = value.toLowerCase();
   try {
     normalized = normalized.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
-  } catch (e) {
+  } catch {
   }
-  return new Set((_a = normalized.match(/[a-z0-9]{3,}/g)) != null ? _a : []);
+  return new Set(normalized.match(/[a-z0-9]{3,}/g) ?? []);
 }
 function scoreCandidate(item, wanted) {
   const name = stringValue(item.name) || stringValue(item.viewPoint) || stringValue(item.alias);
@@ -7038,7 +6985,6 @@ function scoreCandidate(item, wanted) {
   return hits;
 }
 function selectCandidate(items, title, type) {
-  var _a;
   const wanted = tokens(title);
   const compatible = items.filter((item) => {
     const programType = stringValue(item.programType);
@@ -7046,7 +6992,7 @@ function selectCandidate(items, title, type) {
     return programType === "" || !SERIES_TYPES.has(programType);
   });
   const pool = compatible.length > 0 ? compatible : items;
-  return (_a = pool.filter((item) => stringValue(item.contentId) !== "").sort((a, b) => scoreCandidate(b, wanted) - scoreCandidate(a, wanted))[0]) != null ? _a : null;
+  return pool.filter((item) => stringValue(item.contentId) !== "").sort((a, b) => scoreCandidate(b, wanted) - scoreCandidate(a, wanted))[0] ?? null;
 }
 function episodeFrom(detail, wanted) {
   const data = typeof detail.assetData === "object" && detail.assetData !== null && !Array.isArray(detail.assetData) ? detail.assetData : {};
@@ -7066,72 +7012,68 @@ function debugStream(message) {
     headers: {}
   }];
 }
-function getStreams(tmdbId, type, _season, episode) {
-  return __async(this, null, function* () {
-    const streamType = type === "tv" ? "series" : "movie";
-    const wantedEpisode = numberValue(episode);
-    const argsTag = `id=${tmdbId} type=${type} s=${_season} e=${episode}`;
-    if (HOSTS.length === 0 || DES_KEY_HEX === "" || APP_ID === "" || APK_VERSION === "" || TMDB_API_KEY === "") {
-      console.log("[MagisVOD] provider not configured (build-time constants missing)");
-      return DEBUG_ERRORS ? debugStream(`not configured (${argsTag})`) : [];
-    }
-    try {
-      return yield resolveStreams(String(tmdbId != null ? tmdbId : ""), streamType, wantedEpisode, argsTag);
-    } catch (error) {
-      const message = error && error.message ? error.message : String(error);
-      console.log(`[MagisVOD] resolve failed: ${message}`);
-      return DEBUG_ERRORS ? debugStream(`${message} (${argsTag})`) : [];
-    }
-  });
+async function getStreams(tmdbId, type, _season, episode) {
+  const streamType = type === "tv" ? "series" : "movie";
+  const wantedEpisode = numberValue(episode);
+  const argsTag = `id=${tmdbId} type=${type} s=${_season} e=${episode}`;
+  if (HOSTS.length === 0 || DES_KEY_HEX === "" || APP_ID === "" || APK_VERSION === "" || TMDB_API_KEY === "") {
+    console.log("[MagisVOD] provider not configured (build-time constants missing)");
+    return DEBUG_ERRORS ? debugStream(`not configured (${argsTag})`) : [];
+  }
+  try {
+    return await resolveStreams(String(tmdbId ?? ""), streamType, wantedEpisode, argsTag);
+  } catch (error) {
+    const message = error && error.message ? error.message : String(error);
+    console.log(`[MagisVOD] resolve failed: ${message}`);
+    return DEBUG_ERRORS ? debugStream(`${message} (${argsTag})`) : [];
+  }
 }
-function resolveStreams(tmdbId, streamType, wantedEpisode, argsTag) {
-  return __async(this, null, function* () {
-    const title = yield tmdbTitleFor(tmdbId, streamType);
-    if (title === null) return DEBUG_ERRORS ? debugStream(`TMDB title not found (${argsTag})`) : [];
-    let selected = null;
-    for (const query of uniqueTitles(title.title, title.originalTitle)) {
-      const search = yield session.withValidSession(ACCOUNT, (state) => portal.call("v3/searchByName", {
-        value: portalQuery(query),
-        type: "0",
-        columnId: "",
-        filter: "",
-        pageNum: 1,
-        pageSize: 20
-      }, state));
-      selected = selectCandidate(searchItems(search), query, streamType);
-      if (selected !== null) break;
-    }
-    if (selected === null) return DEBUG_ERRORS ? debugStream(`no results in Magis search (${argsTag})`) : [];
-    let contentId = stringValue(selected.contentId);
-    let seriesContentId = "";
-    if (streamType === "series" || SERIES_TYPES.has(stringValue(selected.programType))) {
-      seriesContentId = contentId;
-      const detail = yield session.withValidSession(ACCOUNT, (state) => portal.call("v4/getItemData", {
-        contentId,
-        type: "0",
-        sortType: "0",
-        language: "en",
-        macAddr: "02:00:00:00:00:00"
-      }, state));
-      const episodeId = episodeFrom(detail, wantedEpisode);
-      if (episodeId === null) return DEBUG_ERRORS ? debugStream(`episode not found (${argsTag})`) : [];
-      contentId = episodeId;
-    }
-    try {
-      const playable = yield resolver.resolveVod(ACCOUNT, contentId, seriesContentId);
-      return [{
-        name: "Magis VOD",
-        title: `${title.title} \xB7 Magis`,
-        url: playable.url,
-        quality: "Auto",
-        headers: playable.headers
-      }];
-    } catch (error) {
-      const message = error && error.message ? error.message : String(error);
-      console.log(`[MagisVOD] resolve failed: ${message}`);
-      return DEBUG_ERRORS ? debugStream(`${message} (${argsTag})`) : [];
-    }
-  });
+async function resolveStreams(tmdbId, streamType, wantedEpisode, argsTag) {
+  const title = await tmdbTitleFor(tmdbId, streamType);
+  if (title === null) return DEBUG_ERRORS ? debugStream(`TMDB title not found (${argsTag})`) : [];
+  let selected = null;
+  for (const query of uniqueTitles(title.title, title.originalTitle)) {
+    const search = await session.withValidSession(ACCOUNT, (state) => portal.call("v3/searchByName", {
+      value: portalQuery(query),
+      type: "0",
+      columnId: "",
+      filter: "",
+      pageNum: 1,
+      pageSize: 20
+    }, state));
+    selected = selectCandidate(searchItems(search), query, streamType);
+    if (selected !== null) break;
+  }
+  if (selected === null) return DEBUG_ERRORS ? debugStream(`no results in Magis search (${argsTag})`) : [];
+  let contentId = stringValue(selected.contentId);
+  let seriesContentId = "";
+  if (streamType === "series" || SERIES_TYPES.has(stringValue(selected.programType))) {
+    seriesContentId = contentId;
+    const detail = await session.withValidSession(ACCOUNT, (state) => portal.call("v4/getItemData", {
+      contentId,
+      type: "0",
+      sortType: "0",
+      language: "en",
+      macAddr: "02:00:00:00:00:00"
+    }, state));
+    const episodeId = episodeFrom(detail, wantedEpisode);
+    if (episodeId === null) return DEBUG_ERRORS ? debugStream(`episode not found (${argsTag})`) : [];
+    contentId = episodeId;
+  }
+  try {
+    const playable = await resolver.resolveVod(ACCOUNT, contentId, seriesContentId);
+    return [{
+      name: "Magis VOD",
+      title: `${title.title} \xB7 Magis`,
+      url: playable.url,
+      quality: "Auto",
+      headers: playable.headers
+    }];
+  } catch (error) {
+    const message = error && error.message ? error.message : String(error);
+    console.log(`[MagisVOD] resolve failed: ${message}`);
+    return DEBUG_ERRORS ? debugStream(`${message} (${argsTag})`) : [];
+  }
 }
 module.exports = { getStreams };
 /*! Bundled license information:

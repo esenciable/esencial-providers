@@ -48,7 +48,7 @@
     },
     {
       "id": "hackstore-plain",
-      "name": "Hackstore Plain",
+      "name": "HackStore",
       "description": "HackStore en archivo plano (sin bundler, sin async/await) - test A/B del runtime.",
       "version": "1.0.0",
       "author": "esencialplay",
@@ -78,7 +78,7 @@
         "tv"
       ],
       "filename": "dist/hackstore-es2020.js",
-      "enabled": true,
+      "enabled": false,
       "logo": "",
       "contentLanguage": [
         "es"
@@ -99,7 +99,7 @@
         "tv"
       ],
       "filename": "dist/magis.js",
-      "enabled": true,
+      "enabled": false,
       "contentLanguage": [
         "es"
       ],
@@ -122,7 +122,7 @@
         "tv"
       ],
       "filename": "dist/hackstore.js",
-      "enabled": true,
+      "enabled": false,
       "contentLanguage": [
         "es"
       ],
