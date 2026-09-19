@@ -1,183 +1,189 @@
-[
-  {
-    "id": "magis",
-    "name": "Magis VOD",
-    "description": "Películas y series de Magis con sesión anónima de dispositivo. URLs directas del CDN.",
-    "version": "1.0.0",
-    "author": "esencialplay",
-    "supportedTypes": [
-      "movie",
-      "tv"
-    ],
-    "filename": "providers/magis.js",
-    "enabled": true,
-    "contentLanguage": [
-      "es"
-    ],
-    "formats": [
-      "mp4",
-      "ts"
-    ],
-    "supportsExternalPlayer": true
-  },
-  {
-    "id": "hackstore",
-    "name": "HackStore",
-    "description": "Películas y series de HackStore (API nativa). URLs directas del CDN con headers.",
-    "version": "1.0.0",
-    "author": "esencialplay",
-    "supportedTypes": [
-      "movie",
-      "tv"
-    ],
-    "filename": "providers/hackstore.js",
-    "enabled": true,
-    "contentLanguage": [
-      "es"
-    ],
-    "formats": [
-      "m3u8"
-    ],
-    "supportsExternalPlayer": true
-  },
-  {
-    "id": "lamovie",
-    "name": "LaMovie",
-    "description": "Películas y series de LaMovie (lamovie.org, API nativa). Servidores Latino.",
-    "version": "1.0.0",
-    "author": "esencialplay",
-    "supportedTypes": [
-      "movie",
-      "tv"
-    ],
-    "filename": "providers/lamovie.js",
-    "enabled": true,
-    "contentLanguage": [
-      "es"
-    ],
-    "formats": [
-      "m3u8"
-    ],
-    "supportsExternalPlayer": true
-  },
-  {
-    "id": "sololatino",
-    "name": "SoloLatino",
-    "description": "Catálogo de sololatino.net resuelto vía embed69 (PoW+AES). Solo media directa.",
-    "version": "1.0.0",
-    "author": "esencialplay",
-    "supportedTypes": [
-      "movie",
-      "tv"
-    ],
-    "filename": "providers/sololatino.js",
-    "enabled": true,
-    "contentLanguage": [
-      "es"
-    ],
-    "formats": [
-      "m3u8",
-      "mp4"
-    ],
-    "supportsExternalPlayer": true
-  },
-  {
-    "id": "areshd",
-    "name": "AresHD",
-    "description": "Películas y series de AresHD con pestañas por idioma.",
-    "version": "1.0.0",
-    "author": "esencialplay",
-    "supportedTypes": [
-      "movie",
-      "tv"
-    ],
-    "filename": "providers/areshd.js",
-    "enabled": true,
-    "contentLanguage": [
-      "es"
-    ],
-    "formats": [
-      "m3u8"
-    ],
-    "supportsExternalPlayer": true
-  },
-  {
-    "id": "cinemitas",
-    "name": "Cinemitas",
-    "description": "Películas y series de Cinemitas (DooPlay + admin-ajax).",
-    "version": "1.0.0",
-    "author": "esencialplay",
-    "supportedTypes": [
-      "movie",
-      "tv"
-    ],
-    "filename": "providers/cinemitas.js",
-    "enabled": true,
-    "contentLanguage": [
-      "es"
-    ],
-    "formats": [
-      "m3u8"
-    ],
-    "supportsExternalPlayer": true
-  },
-  {
-    "id": "megadede",
-    "name": "MegaDede",
-    "description": "Películas y series de MegaDede (megadede.mobi, /vidurl/ con PoW+AES).",
-    "version": "1.0.0",
-    "author": "esencialplay",
-    "supportedTypes": [
-      "movie",
-      "tv"
-    ],
-    "filename": "providers/megadede.js",
-    "enabled": true,
-    "contentLanguage": [
-      "es"
-    ],
-    "formats": [
-      "m3u8"
-    ],
-    "supportsExternalPlayer": true
-  },
-  {
-    "id": "entre",
-    "name": "EntrePeliculas",
-    "description": "Películas y series de EntrePeliculasYSeries (/vidurl/ con PoW+AES).",
-    "version": "1.0.0",
-    "author": "esencialplay",
-    "supportedTypes": [
-      "movie",
-      "tv"
-    ],
-    "filename": "providers/entre.js",
-    "enabled": true,
-    "contentLanguage": [
-      "es"
-    ],
-    "formats": [
-      "m3u8"
-    ],
-    "supportsExternalPlayer": true
-  },
-  {
-    "id": "cinecalidad",
-    "name": "CineCalidad",
-    "description": "Películas de CineCalidad (DooPlay, data-option). Solo películas.",
-    "version": "1.0.0",
-    "author": "esencialplay",
-    "supportedTypes": [
-      "movie"
-    ],
-    "filename": "providers/cinecalidad.js",
-    "enabled": true,
-    "contentLanguage": [
-      "es"
-    ],
-    "formats": [
-      "m3u8"
-    ],
-    "supportsExternalPlayer": true
-  }
-]
+{
+  "id": "com.esencialplay.providers",
+  "name": "Esencial Providers",
+  "version": "1.1.0",
+  "description": "Catálogo Latino scraper-based: Magis, HackStore, LaMovie, SoloLatino, AresHD, Cinemitas, MegaDede, EntrePeliculas y CineCalidad. Resolución en el dispositivo.",
+  "scrapers": [
+    {
+      "id": "magis",
+      "name": "Magis VOD",
+      "description": "Películas y series de Magis con sesión anónima de dispositivo. URLs directas del CDN.",
+      "version": "1.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/magis.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "mp4",
+        "ts"
+      ],
+      "supportsExternalPlayer": true
+    },
+    {
+      "id": "hackstore",
+      "name": "HackStore",
+      "description": "Películas y series de HackStore (API nativa). URLs directas del CDN con headers.",
+      "version": "1.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/hackstore.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8"
+      ],
+      "supportsExternalPlayer": true
+    },
+    {
+      "id": "lamovie",
+      "name": "LaMovie",
+      "description": "Películas y series de LaMovie (lamovie.org, API nativa). Servidores Latino.",
+      "version": "1.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/lamovie.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8"
+      ],
+      "supportsExternalPlayer": true
+    },
+    {
+      "id": "sololatino",
+      "name": "SoloLatino",
+      "description": "Catálogo de sololatino.net resuelto vía embed69 (PoW+AES). Solo media directa.",
+      "version": "1.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/sololatino.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8",
+        "mp4"
+      ],
+      "supportsExternalPlayer": true
+    },
+    {
+      "id": "areshd",
+      "name": "AresHD",
+      "description": "Películas y series de AresHD con pestañas por idioma.",
+      "version": "1.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/areshd.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8"
+      ],
+      "supportsExternalPlayer": true
+    },
+    {
+      "id": "cinemitas",
+      "name": "Cinemitas",
+      "description": "Películas y series de Cinemitas (DooPlay + admin-ajax).",
+      "version": "1.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/cinemitas.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8"
+      ],
+      "supportsExternalPlayer": true
+    },
+    {
+      "id": "megadede",
+      "name": "MegaDede",
+      "description": "Películas y series de MegaDede (megadede.mobi, /vidurl/ con PoW+AES).",
+      "version": "1.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/megadede.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8"
+      ],
+      "supportsExternalPlayer": true
+    },
+    {
+      "id": "entre",
+      "name": "EntrePeliculas",
+      "description": "Películas y series de EntrePeliculasYSeries (/vidurl/ con PoW+AES).",
+      "version": "1.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/entre.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8"
+      ],
+      "supportsExternalPlayer": true
+    },
+    {
+      "id": "cinecalidad",
+      "name": "CineCalidad",
+      "description": "Películas de CineCalidad (DooPlay, data-option). Solo películas.",
+      "version": "1.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie"
+      ],
+      "filename": "providers/cinecalidad.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8"
+      ],
+      "supportsExternalPlayer": true
+    }
+  ]
+}
