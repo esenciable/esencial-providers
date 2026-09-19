@@ -44,8 +44,12 @@ const scrapers = Array.isArray(manifest) ? manifest : manifest.scrapers;
     ].join('\n');
   }
   for (const scraper of scrapers) {
+    if (scraper.enabled === false || fs.existsSync(path.join(__dirname, 'flat', `${scraper.id}.js`)) === false && scraper.filename.startsWith('providers/')) continue;
     const flatSource = path.join(__dirname, 'flat', `${scraper.id}.js`);
-    const outfile = path.join(__dirname, 'dist', path.basename(scraper.filename));
+    // Cache-busting: the raw CDN caches provider files by URL, so the file name carries the
+    // scraper version. Bump `version` in manifest.json whenever a provider changes.
+    const versioned = `${scraper.id}-v${String(scraper.version || '1').split('.')[0]}.js`;
+    const outfile = path.join(__dirname, 'dist', versioned);
     if (fs.existsSync(flatSource)) {
       const body = fs.readFileSync(flatSource, 'utf8');
       const header = `/** ${scraper.id} - built flat (prelude + body), no bundler. */\n`;
@@ -55,13 +59,14 @@ const scrapers = Array.isArray(manifest) ? manifest : manifest.scrapers;
       console.log(`flat ${scraper.id} -> dist/${path.basename(scraper.filename)} (${fs.statSync(outfile).size} bytes)`);
       continue;
     }
-    if (!fs.existsSync(path.join(__dirname, 'providers', path.basename(scraper.filename)))) {
+    const legacySource = path.join(__dirname, 'providers', `${scraper.id}.js`);
+    if (!fs.existsSync(legacySource)) {
       console.log(`skip ${scraper.id} (sin fuente flat/ ni providers/)`);
       continue;
     }
     const esbuild = require('esbuild');
     await esbuild.build({
-      entryPoints: [path.join(__dirname, 'providers', path.basename(scraper.filename))],
+      entryPoints: [legacySource],
       outfile,
       bundle: true, platform: 'browser', format: 'cjs', target: 'es2020', minify: false, logLevel: 'silent',
     });
