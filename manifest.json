@@ -8,13 +8,13 @@
       "id": "esencial-test",
       "name": "Esencial Test",
       "description": "Diagnóstico: video de muestra sin red. Si aparece, la carga de providers funciona.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
-      "filename": "dist/esencial-test-v2.js",
+      "filename": "dist/esencial-test-v3.js",
       "enabled": true,
       "logo": "",
       "contentLanguage": [
@@ -29,13 +29,13 @@
       "id": "esencial-diag",
       "name": "Esencial Diag",
       "description": "Diagnóstico de runtime: muestra en el título qué APIs y redes funcionan en este dispositivo.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
-      "filename": "dist/esencial-diag-v2.js",
+      "filename": "dist/esencial-diag-v3.js",
       "enabled": true,
       "logo": "",
       "contentLanguage": [
@@ -50,13 +50,13 @@
       "id": "diag-magis",
       "name": "Diag Magis",
       "description": "Diagnóstico del portal Magis en el dispositivo (tiempos y errores en el título).",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
-      "filename": "dist/diag-magis-v2.js",
+      "filename": "dist/diag-magis-v3.js",
       "enabled": true,
       "logo": "",
       "contentLanguage": [
@@ -71,7 +71,7 @@
       "id": "hackstore-plain",
       "name": "HackStore",
       "description": "HackStore en archivo plano (sin bundler, sin async/await) - test A/B del runtime.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
@@ -92,13 +92,13 @@
       "id": "hackstore-es2020",
       "name": "Hackstore ES2020",
       "description": "HackStore empaquetado con async/await nativo (sin generadores) - test A/B del runtime.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
-      "filename": "dist/hackstore-es2020-v2.js",
+      "filename": "dist/hackstore-es2020-v3.js",
       "enabled": false,
       "logo": "",
       "contentLanguage": [
@@ -113,13 +113,13 @@
       "id": "magis",
       "name": "Magis VOD",
       "description": "Películas y series de Magis con sesión anónima de dispositivo. URLs directas del CDN.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
-      "filename": "dist/magis-v2.js",
+      "filename": "dist/magis-v3.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -136,13 +136,13 @@
       "id": "hackstore",
       "name": "HackStore",
       "description": "Películas y series de HackStore (API nativa). URLs directas del CDN con headers.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
-      "filename": "dist/hackstore-v2.js",
+      "filename": "dist/hackstore-v3.js",
       "enabled": false,
       "contentLanguage": [
         "es"
@@ -158,13 +158,13 @@
       "id": "lamovie",
       "name": "LaMovie",
       "description": "Películas y series de LaMovie (lamovie.org, API nativa). Servidores Latino.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
-      "filename": "dist/lamovie-v2.js",
+      "filename": "dist/lamovie-v3.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -180,13 +180,13 @@
       "id": "sololatino",
       "name": "SoloLatino",
       "description": "Catálogo de sololatino.net resuelto vía embed69 (PoW+AES). Solo media directa.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
-      "filename": "dist/sololatino-v2.js",
+      "filename": "dist/sololatino-v3.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -203,13 +203,13 @@
       "id": "areshd",
       "name": "AresHD",
       "description": "Películas y series de AresHD con pestañas por idioma.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
-      "filename": "dist/areshd-v2.js",
+      "filename": "dist/areshd-v3.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -225,13 +225,13 @@
       "id": "cinemitas",
       "name": "Cinemitas",
       "description": "Películas y series de Cinemitas (DooPlay + admin-ajax).",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
-      "filename": "dist/cinemitas-v2.js",
+      "filename": "dist/cinemitas-v3.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -247,13 +247,13 @@
       "id": "megadede",
       "name": "MegaDede",
       "description": "Películas y series de MegaDede (megadede.mobi, /vidurl/ con PoW+AES).",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
-      "filename": "dist/megadede-v2.js",
+      "filename": "dist/megadede-v3.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -269,13 +269,13 @@
       "id": "entre",
       "name": "EntrePeliculas",
       "description": "Películas y series de EntrePeliculasYSeries (/vidurl/ con PoW+AES).",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
-      "filename": "dist/entre-v2.js",
+      "filename": "dist/entre-v3.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -291,12 +291,12 @@
       "id": "cinecalidad",
       "name": "CineCalidad",
       "description": "Películas de CineCalidad (DooPlay, data-option). Solo películas.",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie"
       ],
-      "filename": "dist/cinecalidad-v2.js",
+      "filename": "dist/cinecalidad-v3.js",
       "enabled": true,
       "contentLanguage": [
         "es"

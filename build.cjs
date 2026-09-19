@@ -15,6 +15,7 @@ const scrapers = Array.isArray(manifest) ? manifest : manifest.scrapers;
 (async () => {
   const prelude = fs.readFileSync(path.join(__dirname, 'lib', 'flat-prelude.js'), 'utf8');
   const crypto3des = fs.readFileSync(path.join(__dirname, 'lib', 'flat-crypto3des.js'), 'utf8');
+  const magisCore = fs.readFileSync(path.join(__dirname, 'lib', 'flat-magis-core.js'), 'utf8');
 
   /** Operator constants for the Magis portal (public APK values + the portal 3DES key).
    * Read from the environment first, else from the sibling addon .env. Never printed. */
@@ -54,7 +55,7 @@ const scrapers = Array.isArray(manifest) ? manifest : manifest.scrapers;
       const body = fs.readFileSync(flatSource, 'utf8');
       const header = `/** ${scraper.id} - built flat (prelude + body), no bundler. */\n`;
       const needsMagis = scraper.id === 'magis' || scraper.id === 'diag-magis';
-      const extra = needsMagis ? magisConstantsBlock() + crypto3des + '\n' : '';
+      const extra = needsMagis ? magisConstantsBlock() + crypto3des + '\n' + magisCore + '\n' : '';
       // Minify the concatenated flat file: Nuvio's loader appears to have a size ceiling
       // (~50KB: 40-43KB providers load, 56-62KB ones do not), and minification only removes
       // comments/whitespace - no module wrappers, no bundling.
