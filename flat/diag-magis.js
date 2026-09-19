@@ -1,39 +1,95 @@
-/** diag-magis - runs the REAL Magis flow (same core as the provider) and reports each step
- * and its duration in the stream title, so the TV screen shows exactly where it stands. */
+/** diag-magis - probes HOW headers survive the device network bridge.
+ * The portal rejects requests without the `apk`/`apkVer` headers (proven: portal200001),
+ * and the TV seems to drop them, so this tries several transports and reports which one
+ * the portal accepts. */
 var DIAG_SAMPLE = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+var DIAG_PATH = 'v3/snToken';
+var DIAG_BEAN = { hardwareInfo: 'ranchu', model: 'sdk_gphone64_arm64', product: 'sdk_gphone64_arm64', cpu: 'arm64-v8a' };
 
-function diagDescribe(error) {
-  if (!error) return 'ok';
-  var message = error && error.message ? error.message : String(error);
-  return message.replace('Magis portal rejected request (', 'portal ').replace(')', '').slice(0, 90);
+function diagPlainBody() {
+  var body = { loginType: '2', appLanguage: 'en', apkVersion: MAGIS_APK_VERSION, sysVersion: '2025-08-07 05:40:11_36_16_', appId: MAGIS_APP_ID, hardwareInfo: 'ranchu', model: 'sdk_gphone64_arm64', product: 'sdk_gphone64_arm64', cpu: 'arm64-v8a', B29: '', reserve1: '', deviceToken: '', sn: '', drmId: '', sdkVer: 36 };
+  var keys = Object.keys(DIAG_BEAN);
+  for (var i = 0; i < keys.length; i++) body[keys[i]] = DIAG_BEAN[keys[i]];
+  return JSON.stringify(body);
+}
+
+function diagVerdict(json) {
+  if (!json) return 'sin respuesta';
+  var code = typeof json.returnCode === 'string' ? json.returnCode : '';
+  if (code === '' || code === '0') return '✅ ACEPTADO';
+  return '❌ ' + code + (json.errorMessage ? ' ' + String(json.errorMessage).slice(0, 20) : '');
+}
+
+function tryFetchA(url, wire) {
+  return fetch(url, { method: 'POST', headers: { 'content-type': 'application/json;charset=utf-8', 'apk': MAGIS_APP_ID, 'apkVer': '43404', 'spkgVer': '2025-08-07 05:40:11_36_16_', 'User-Agent': 'okhttp/3.12.12' }, body: wire })
+    .then(function (r) { return r.json(); }).catch(function (e) { return { error: e.message }; });
+}
+
+function tryFetchLower(url, wire) {
+  return fetch(url, { method: 'POST', headers: { 'content-type': 'application/json;charset=utf-8', 'apk': MAGIS_APP_ID, 'apkver': '43404', 'spkgver': '2025-08-07 05:40:11_36_16_', 'user-agent': 'okhttp/3.12.12' }, body: wire })
+    .then(function (r) { return r.json(); }).catch(function (e) { return { error: e.message }; });
+}
+
+function tryFetchHeadersObject(url, wire) {
+  var headers = new Headers();
+  headers.append('content-type', 'application/json;charset=utf-8');
+  headers.append('apk', MAGIS_APP_ID);
+  headers.append('apkVer', '43404');
+  headers.append('spkgVer', '2025-08-07 05:40:11_36_16_');
+  headers.append('User-Agent', 'okhttp/3.12.12');
+  return fetch(url, { method: 'POST', headers: headers, body: wire })
+    .then(function (r) { return r.json(); }).catch(function (e) { return { error: e.message }; });
+}
+
+function tryXhr(url, wire, withHeaders) {
+  return new Promise(function (resolve) {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', url, true);
+      if (withHeaders) {
+        xhr.setRequestHeader('content-type', 'application/json;charset=utf-8');
+        xhr.setRequestHeader('apk', MAGIS_APP_ID);
+        xhr.setRequestHeader('apkVer', '43404');
+        xhr.setRequestHeader('spkgVer', '2025-08-07 05:40:11_36_16_');
+        xhr.setRequestHeader('User-Agent', 'okhttp/3.12.12');
+      }
+      xhr.onload = function () { try { resolve(JSON.parse(xhr.responseText)); } catch (e) { resolve({ error: 'respuesta no-JSON (' + xhr.status + ')' }); } };
+      xhr.onerror = function () { resolve({ error: 'xhr error' }); };
+      xhr.timeout = 15000;
+      xhr.ontimeout = function () { resolve({ error: 'xhr timeout' }); };
+      xhr.send(wire);
+    } catch (e) { resolve({ error: 'xhr no disponible: ' + e.message }); }
+  });
 }
 
 function getStreams(tmdbId, mediaType, season, episode) {
-  var lines = ['MAGIS_DIAG hosts=' + MAGIS_HOSTS.length + ' appId=' + (MAGIS_APP_ID ? 'ok' : 'FALTA') + ' key=' + (MAGIS_3DES_KEY ? MAGIS_3DES_KEY.length + 'hex' : 'FALTA')];
-  var started = Date.now();
-  if (!MAGIS_HOSTS.length || !MAGIS_3DES_KEY) lines.push('config: FALTAN CONSTANTES');
-  else {
-    var t0 = Date.now();
-    return magisActivate()
-      .then(function (state) {
-        lines.push('activación: OK en ' + (Date.now() - t0) + 'ms (userId=' + (state.userId ? 'ok' : 'VACIO') + ')');
-        var t1 = Date.now();
-        return magisCall('v3/searchByName', {
-          value: 'Coco', type: '0', columnId: '', filter: '', pageNum: 1, pageSize: 20,
-        }, state).then(function (search) {
-          var items = magisSearchItems(search);
-          lines.push('búsqueda: OK en ' + (Date.now() - t1) + 'ms (items=' + items.length + ')');
-        });
-      })
-      .catch(function (error) {
-        lines.push('FALLÓ en ' + (Date.now() - started) + 'ms: ' + diagDescribe(error));
-      })
-      .then(function () {
-        lines.push('TOTAL: ' + (Date.now() - started) + 'ms');
-        return [{ name: 'Diag Magis', title: lines.join('\n'), url: DIAG_SAMPLE, quality: '720p', headers: {} }];
-      });
+  var lines = ['MAGIS_LADDER hosts=' + MAGIS_HOSTS.length + ' XHR=' + (typeof XMLHttpRequest) + ' Headers=' + (typeof Headers)];
+  var wire = magisEncryptBody(diagPlainBody(), MAGIS_3DES_KEY);
+  var url = 'https://' + MAGIS_HOSTS[0] + '/api/portalCore/' + DIAG_PATH;
+  var transports = [
+    ['fetch headers obj', function () { return tryFetchA(url, wire); }],
+    ['fetch minúsculas', function () { return tryFetchLower(url, wire); }],
+    ['fetch Headers()', function () { return tryFetchHeadersObject(url, wire); }],
+    ['XHR con headers', function () { return tryXhr(url, wire, true); }],
+    ['XHR sin headers', function () { return tryXhr(url, wire, false); }],
+  ];
+  var index = 0;
+  var winner = null;
+  function next() {
+    if (index >= transports.length || winner) {
+      lines.push(winner ? 'GANADOR: ' + winner : 'NINGUNO pasó los headers');
+      return Promise.resolve([{ name: 'Diag Magis', title: lines.join('\n'), url: DIAG_SAMPLE, quality: '720p', headers: {} }]);
+    }
+    var entry = transports[index++];
+    var started = Date.now();
+    return entry[1]().then(function (json) {
+      var verdict = json && json.error ? '❌ ' + json.error : diagVerdict(json);
+      lines.push(entry[0] + ': ' + verdict + ' (' + (Date.now() - started) + 'ms)');
+      if (verdict.indexOf('ACEPTADO') !== -1 && winner === null) winner = entry[0];
+      return next();
+    });
   }
-  return Promise.resolve([{ name: 'Diag Magis', title: lines.join('\n'), url: DIAG_SAMPLE, quality: '720p', headers: {} }]);
+  return next();
 }
 
 module.exports = { getStreams: getStreams };
