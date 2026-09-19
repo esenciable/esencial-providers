@@ -5,6 +5,27 @@
   "description": "Catálogo Latino scraper-based: Magis, HackStore, LaMovie, SoloLatino, AresHD, Cinemitas, MegaDede, EntrePeliculas y CineCalidad. Resolución en el dispositivo.",
   "scrapers": [
     {
+      "id": "esencial-test",
+      "name": "Esencial Test",
+      "description": "Diagnóstico: video de muestra sin red. Si aparece, la carga de providers funciona.",
+      "version": "1.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "dist/esencial-test.js",
+      "enabled": true,
+      "logo": "",
+      "contentLanguage": [
+        "en"
+      ],
+      "formats": [
+        "m3u8"
+      ],
+      "supportsExternalPlayer": true
+    },
+    {
       "id": "magis",
       "name": "Magis VOD",
       "description": "Películas y series de Magis con sesión anónima de dispositivo. URLs directas del CDN.",
@@ -23,7 +44,9 @@
         "mp4",
         "ts"
       ],
-      "supportsExternalPlayer": true
+      "supportsExternalPlayer": true,
+      "logo": "",
+      "limited": false
     },
     {
       "id": "hackstore",
@@ -43,7 +66,9 @@
       "formats": [
         "m3u8"
       ],
-      "supportsExternalPlayer": true
+      "supportsExternalPlayer": true,
+      "logo": "",
+      "limited": false
     },
     {
       "id": "lamovie",
@@ -63,7 +88,9 @@
       "formats": [
         "m3u8"
       ],
-      "supportsExternalPlayer": true
+      "supportsExternalPlayer": true,
+      "logo": "",
+      "limited": false
     },
     {
       "id": "sololatino",
@@ -84,7 +111,9 @@
         "m3u8",
         "mp4"
       ],
-      "supportsExternalPlayer": true
+      "supportsExternalPlayer": true,
+      "logo": "",
+      "limited": false
     },
     {
       "id": "areshd",
@@ -104,7 +133,9 @@
       "formats": [
         "m3u8"
       ],
-      "supportsExternalPlayer": true
+      "supportsExternalPlayer": true,
+      "logo": "",
+      "limited": false
     },
     {
       "id": "cinemitas",
@@ -124,7 +155,9 @@
       "formats": [
         "m3u8"
       ],
-      "supportsExternalPlayer": true
+      "supportsExternalPlayer": true,
+      "logo": "",
+      "limited": false
     },
     {
       "id": "megadede",
@@ -144,7 +177,9 @@
       "formats": [
         "m3u8"
       ],
-      "supportsExternalPlayer": true
+      "supportsExternalPlayer": true,
+      "logo": "",
+      "limited": false
     },
     {
       "id": "entre",
@@ -164,7 +199,9 @@
       "formats": [
         "m3u8"
       ],
-      "supportsExternalPlayer": true
+      "supportsExternalPlayer": true,
+      "logo": "",
+      "limited": false
     },
     {
       "id": "cinecalidad",
@@ -183,7 +220,9 @@
       "formats": [
         "m3u8"
       ],
-      "supportsExternalPlayer": true
+      "supportsExternalPlayer": true,
+      "logo": "",
+      "limited": false
     }
   ]
 }
