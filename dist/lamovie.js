@@ -6,6 +6,26 @@ var __commonJS = (cb, mod) => function __require() {
     throw mod = 0, e;
   }
 };
+var __async = (__this, __arguments, generator) => {
+  return new Promise((resolve, reject) => {
+    var fulfilled = (value) => {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    var rejected = (value) => {
+      try {
+        step(generator.throw(value));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    var step = (x) => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+    step((generator = generator.apply(__this, __arguments)).next());
+  });
+};
 
 // lib/http.js
 var require_http = __commonJS({
@@ -15,43 +35,47 @@ var require_http = __commonJS({
     function sleep(ms) {
       return new Promise((resolve) => setTimeout(resolve, ms));
     }
-    async function fetchText2(url, options = {}) {
-      const retries = options.retries === void 0 ? 1 : options.retries;
-      const headers = Object.assign(
-        { "User-Agent": DESKTOP_UA2, Accept: HTML_ACCEPT },
-        options.headers || {}
-      );
-      const doFetch = options.fetcher || fetch;
-      let attempt = 0;
-      for (; ; ) {
-        let response;
-        try {
-          response = await doFetch(url, { method: "GET", headers, redirect: "follow" });
-        } catch {
-          return null;
+    function fetchText2(_0) {
+      return __async(this, arguments, function* (url, options = {}) {
+        const retries = options.retries === void 0 ? 1 : options.retries;
+        const headers = Object.assign(
+          { "User-Agent": DESKTOP_UA2, Accept: HTML_ACCEPT },
+          options.headers || {}
+        );
+        const doFetch = options.fetcher || fetch;
+        let attempt = 0;
+        for (; ; ) {
+          let response;
+          try {
+            response = yield doFetch(url, { method: "GET", headers, redirect: "follow" });
+          } catch (e) {
+            return null;
+          }
+          const retryable = response.status === 429 || response.status === 408 || response.status >= 500 && response.status < 600;
+          if (retryable && attempt < retries) {
+            attempt += 1;
+            yield sleep(Math.min(3200, 400 * Math.pow(2, attempt - 1)));
+            continue;
+          }
+          if (!response.ok) return null;
+          try {
+            return yield response.text();
+          } catch (e) {
+            return null;
+          }
         }
-        const retryable = response.status === 429 || response.status === 408 || response.status >= 500 && response.status < 600;
-        if (retryable && attempt < retries) {
-          attempt += 1;
-          await sleep(Math.min(3200, 400 * Math.pow(2, attempt - 1)));
-          continue;
-        }
-        if (!response.ok) return null;
-        try {
-          return await response.text();
-        } catch {
-          return null;
-        }
-      }
+      });
     }
-    async function fetchJson2(url, options = {}) {
-      const body = await fetchText2(url, Object.assign({}, options, { headers: Object.assign({ Accept: "application/json" }, options.headers || {}) }));
-      if (body === null) return null;
-      try {
-        return JSON.parse(body);
-      } catch {
-        return null;
-      }
+    function fetchJson2(_0) {
+      return __async(this, arguments, function* (url, options = {}) {
+        const body = yield fetchText2(url, Object.assign({}, options, { headers: Object.assign({ Accept: "application/json" }, options.headers || {}) }));
+        if (body === null) return null;
+        try {
+          return JSON.parse(body);
+        } catch (e) {
+          return null;
+        }
+      });
     }
     module2.exports = { fetchText: fetchText2, fetchJson: fetchJson2, sleep, DESKTOP_UA: DESKTOP_UA2, HTML_ACCEPT };
   }
@@ -65,7 +89,7 @@ var require_titles = __commonJS({
       let normalized = String(title || "").toLowerCase();
       try {
         normalized = normalized.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      } catch {
+      } catch (e) {
       }
       return normalized.replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
     }
@@ -73,7 +97,7 @@ var require_titles = __commonJS({
       let slug = String(title || "");
       try {
         slug = slug.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      } catch {
+      } catch (e) {
       }
       slug = slug.toLowerCase().replace(/[^a-z0-9\s-]/g, " ").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
       return year ? slug + "-" + year : slug;
@@ -128,7 +152,7 @@ var require_embeds = __commonJS({
           if (d !== -1) result += String.fromCharCode(n & 255);
         }
         return result;
-      } catch {
+      } catch (e) {
         return null;
       }
     }
@@ -171,7 +195,7 @@ var require_embeds = __commonJS({
         const second = base64Decode(shifted.split("").reverse().join(""));
         if (second === null) return null;
         return JSON.parse(second);
-      } catch {
+      } catch (e) {
         return null;
       }
     }
@@ -191,7 +215,7 @@ var require_embeds = __commonJS({
         const second = base64Decode(shifted.split("").reverse().join(""));
         if (second === null) return null;
         return JSON.parse(second);
-      } catch {
+      } catch (e) {
         return null;
       }
     }
@@ -6853,296 +6877,330 @@ var require_resolvers = __commonJS({
     } = require_embeds();
     var DESKTOP_UA2 = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
     var HTML_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-    async function getPage(url, headers, fetcher) {
-      return await fetchText2(url, { headers, retries: 1, fetcher });
+    function getPage(url, headers, fetcher) {
+      return __async(this, null, function* () {
+        return yield fetchText2(url, { headers, retries: 1, fetcher });
+      });
     }
     function stringField(value, field) {
       if (typeof value !== "object" || value === null) return null;
       const candidate = value[field];
       return typeof candidate === "string" && candidate !== "" ? candidate : null;
     }
-    async function resolveGoodstream(embedUrl, fetcher) {
-      const html = await getPage(embedUrl, { Referer: "https://goodstream.one", Origin: "https://goodstream.one", Accept: HTML_ACCEPT }, fetcher);
-      if (html === null) return null;
-      const file = (html.match(/file:\s*"([^"]+)"/) || [])[1];
-      if (file === void 0) return null;
-      return { url: file, quality: qualityFromUrl(file), serverName: "GoodStream", headers: { Referer: embedUrl, Origin: "https://goodstream.one", "User-Agent": DESKTOP_UA2 } };
+    function resolveGoodstream(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        const html = yield getPage(embedUrl, { Referer: "https://goodstream.one", Origin: "https://goodstream.one", Accept: HTML_ACCEPT }, fetcher);
+        if (html === null) return null;
+        const file = (html.match(/file:\s*"([^"]+)"/) || [])[1];
+        if (file === void 0) return null;
+        return { url: file, quality: qualityFromUrl(file), serverName: "GoodStream", headers: { Referer: embedUrl, Origin: "https://goodstream.one", "User-Agent": DESKTOP_UA2 } };
+      });
     }
-    async function resolveStreamWish(embedUrl, fetcher) {
-      const url = embedUrl.replace("hglink.to", "vibuxer.com");
-      const origin = (url.match(/^(https?:\/\/[^/]+)/) || [null, "https://hlswish.com"])[1] || "https://hlswish.com";
-      const html = await getPage(url, {
-        Referer: "https://embed69.org/",
-        Origin: "https://embed69.org",
-        "Accept-Language": "es-MX,es;q=0.9",
-        Accept: HTML_ACCEPT
-      }, fetcher);
-      if (html === null) return null;
-      const file = (html.match(/file\s*:\s*["']([^"']+)["']/i) || [])[1];
-      if (file !== void 0) {
-        let target = absolute(file, origin);
-        if (target.indexOf("vibuxer.com/stream/") !== -1) {
-          try {
-            const followed = await fetcher(target, { headers: { "User-Agent": DESKTOP_UA2, Referer: origin + "/" }, redirect: "follow" });
-            if (followed.url && followed.url.indexOf(".m3u8") !== -1) target = followed.url;
-          } catch {
+    function resolveStreamWish(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        const url = embedUrl.replace("hglink.to", "vibuxer.com");
+        const origin = (url.match(/^(https?:\/\/[^/]+)/) || [null, "https://hlswish.com"])[1] || "https://hlswish.com";
+        const html = yield getPage(url, {
+          Referer: "https://embed69.org/",
+          Origin: "https://embed69.org",
+          "Accept-Language": "es-MX,es;q=0.9",
+          Accept: HTML_ACCEPT
+        }, fetcher);
+        if (html === null) return null;
+        const file = (html.match(/file\s*:\s*["']([^"']+)["']/i) || [])[1];
+        if (file !== void 0) {
+          let target = absolute(file, origin);
+          if (target.indexOf("vibuxer.com/stream/") !== -1) {
+            try {
+              const followed = yield fetcher(target, { headers: { "User-Agent": DESKTOP_UA2, Referer: origin + "/" }, redirect: "follow" });
+              if (followed.url && followed.url.indexOf(".m3u8") !== -1) target = followed.url;
+            } catch (e) {
+            }
           }
-        }
-        return { url: target, quality: qualityFromUrl(target), serverName: "StreamWish", headers: { "User-Agent": DESKTOP_UA2, Referer: origin + "/" } };
-      }
-      const unpacked = unpackPacked(html);
-      if (unpacked !== null) {
-        const fromHls = (unpacked.match(/\{[^{}]*"hls[234]"\s*:\s*"([^"]+)"[^{}]*\}/) || [])[1] || (unpacked.match(/["']([^"']{30,}\.m3u8[^"']*)['"]/) || [])[1];
-        if (fromHls !== void 0) {
-          const target = absolute(fromHls, origin);
           return { url: target, quality: qualityFromUrl(target), serverName: "StreamWish", headers: { "User-Agent": DESKTOP_UA2, Referer: origin + "/" } };
         }
-      }
-      const fileCode = (url.match(/\/e\/([\w-]+)/) || [])[1] || "";
-      const pageHash = (html.match(/[0-9a-f]{32}/i) || [])[0];
-      if (fileCode !== "" && pageHash !== void 0) {
-        const dl = await fetchText2(origin + "/dl?op=view&file_code=" + encodeURIComponent(fileCode) + "&hash=" + pageHash + "&embed=1&referer=&adb=1&hls4=1", {
-          headers: { "User-Agent": DESKTOP_UA2, Referer: url, "X-Requested-With": "XMLHttpRequest" }
-        }, fetcher);
-        const fromDl = dl !== null ? (dl.match(/https?:\/\/[^\s"']+\.m3u8[^\s"']*/i) || [])[0] : void 0;
-        if (fromDl !== void 0) {
-          return { url: fromDl, quality: qualityFromUrl(fromDl), serverName: "StreamWish", headers: { "User-Agent": DESKTOP_UA2, Referer: origin + "/" } };
+        const unpacked = unpackPacked(html);
+        if (unpacked !== null) {
+          const fromHls = (unpacked.match(/\{[^{}]*"hls[234]"\s*:\s*"([^"]+)"[^{}]*\}/) || [])[1] || (unpacked.match(/["']([^"']{30,}\.m3u8[^"']*)['"]/) || [])[1];
+          if (fromHls !== void 0) {
+            const target = absolute(fromHls, origin);
+            return { url: target, quality: qualityFromUrl(target), serverName: "StreamWish", headers: { "User-Agent": DESKTOP_UA2, Referer: origin + "/" } };
+          }
         }
-      }
-      const raw = (html.match(/https?:\/\/[^"'\s\\]+\.m3u8[^"'\s\\]*/i) || [])[0];
-      if (raw !== void 0) {
-        return { url: raw, quality: qualityFromUrl(raw), serverName: "StreamWish", headers: { "User-Agent": DESKTOP_UA2, Referer: origin + "/" } };
-      }
-      return null;
+        const fileCode = (url.match(/\/e\/([\w-]+)/) || [])[1] || "";
+        const pageHash = (html.match(/[0-9a-f]{32}/i) || [])[0];
+        if (fileCode !== "" && pageHash !== void 0) {
+          const dl = yield fetchText2(origin + "/dl?op=view&file_code=" + encodeURIComponent(fileCode) + "&hash=" + pageHash + "&embed=1&referer=&adb=1&hls4=1", {
+            headers: { "User-Agent": DESKTOP_UA2, Referer: url, "X-Requested-With": "XMLHttpRequest" }
+          }, fetcher);
+          const fromDl = dl !== null ? (dl.match(/https?:\/\/[^\s"']+\.m3u8[^\s"']*/i) || [])[0] : void 0;
+          if (fromDl !== void 0) {
+            return { url: fromDl, quality: qualityFromUrl(fromDl), serverName: "StreamWish", headers: { "User-Agent": DESKTOP_UA2, Referer: origin + "/" } };
+          }
+        }
+        const raw = (html.match(/https?:\/\/[^"'\s\\]+\.m3u8[^"'\s\\]*/i) || [])[0];
+        if (raw !== void 0) {
+          return { url: raw, quality: qualityFromUrl(raw), serverName: "StreamWish", headers: { "User-Agent": DESKTOP_UA2, Referer: origin + "/" } };
+        }
+        return null;
+      });
     }
-    async function resolveVoe(embedUrl, fetcher) {
-      let html = await getPage(embedUrl, { Referer: embedUrl, Accept: HTML_ACCEPT }, fetcher);
-      if (html === null) return null;
-      if (/permanentToken/i.test(html)) {
-        const redirect = (html.match(/window\.location\.href\s*=\s*'([^']+)'/i) || [])[1];
-        if (redirect !== void 0) {
-          const next = await getPage(redirect, { Referer: embedUrl, Accept: HTML_ACCEPT }, fetcher);
-          if (next !== null) html = next;
+    function resolveVoe(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        let html = yield getPage(embedUrl, { Referer: embedUrl, Accept: HTML_ACCEPT }, fetcher);
+        if (html === null) return null;
+        if (/permanentToken/i.test(html)) {
+          const redirect = (html.match(/window\.location\.href\s*=\s*'([^']+)'/i) || [])[1];
+          if (redirect !== void 0) {
+            const next = yield getPage(redirect, { Referer: embedUrl, Accept: HTML_ACCEPT }, fetcher);
+            if (next !== null) html = next;
+          }
         }
-      }
-      const lutPair = html.match(/json">\s*\[\s*['"]([^'"]+)['"]\s*\]\s*<\/script>\s*<script[^>]*src=['"]([^'"]+)['"]/i);
-      if (lutPair !== null) {
-        const loader = await getPage(absolute(lutPair[2], embedUrl), { Referer: embedUrl }, fetcher);
-        const luts = loader !== null ? (loader.match(/(\[(?:'[^']{1,10}'[\s,]*){4,12}\])/i) || [])[1] || (loader.match(/(\[(?:"[^"]{1,10}"[,\s]*){4,12}\])/i) || [])[1] : void 0;
-        if (luts !== void 0) {
-          const decoded = voeDecodeWithLut(lutPair[1], luts);
+        const lutPair = html.match(/json">\s*\[\s*['"]([^'"]+)['"]\s*\]\s*<\/script>\s*<script[^>]*src=['"]([^'"]+)['"]/i);
+        if (lutPair !== null) {
+          const loader = yield getPage(absolute(lutPair[2], embedUrl), { Referer: embedUrl }, fetcher);
+          const luts = loader !== null ? (loader.match(/(\[(?:'[^']{1,10}'[\s,]*){4,12}\])/i) || [])[1] || (loader.match(/(\[(?:"[^"]{1,10}"[,\s]*){4,12}\])/i) || [])[1] : void 0;
+          if (luts !== void 0) {
+            const decoded = voeDecodeWithLut(lutPair[1], luts);
+            const source = stringField(decoded, "source") || stringField(decoded, "direct_access_url");
+            if (source !== null) {
+              return { url: source, quality: qualityFromUrl(source), serverName: "VOE", headers: { Referer: embedUrl, "User-Agent": DESKTOP_UA2 } };
+            }
+          }
+        }
+        const rot13 = (html.match(/<script type="application\/json">([\s\S]*?)<\/script>/) || [])[1];
+        if (rot13 !== void 0) {
+          const decoded = voeDecodeRot13(rot13.trim());
           const source = stringField(decoded, "source") || stringField(decoded, "direct_access_url");
           if (source !== null) {
             return { url: source, quality: qualityFromUrl(source), serverName: "VOE", headers: { Referer: embedUrl, "User-Agent": DESKTOP_UA2 } };
           }
         }
-      }
-      const rot13 = (html.match(/<script type="application\/json">([\s\S]*?)<\/script>/) || [])[1];
-      if (rot13 !== void 0) {
-        const decoded = voeDecodeRot13(rot13.trim());
-        const source = stringField(decoded, "source") || stringField(decoded, "direct_access_url");
-        if (source !== null) {
-          return { url: source, quality: qualityFromUrl(source), serverName: "VOE", headers: { Referer: embedUrl, "User-Agent": DESKTOP_UA2 } };
+        const fields = [];
+        const re = /(?:mp4|hls)['"]\s*:\s*['"]([^'"]+)['"]/gi;
+        let match;
+        while ((match = re.exec(html)) !== null) fields.push(match[1]);
+        for (const value of fields) {
+          if (value === "") continue;
+          const target = value.indexOf("aHR0") === 0 ? base64Decode(value) || value : value;
+          return { url: target, quality: qualityFromUrl(target), serverName: "VOE", headers: { Referer: embedUrl, "User-Agent": DESKTOP_UA2 } };
         }
-      }
-      const fields = [];
-      const re = /(?:mp4|hls)['"]\s*:\s*['"]([^'"]+)['"]/gi;
-      let match;
-      while ((match = re.exec(html)) !== null) fields.push(match[1]);
-      for (const value of fields) {
-        if (value === "") continue;
-        const target = value.indexOf("aHR0") === 0 ? base64Decode(value) || value : value;
-        return { url: target, quality: qualityFromUrl(target), serverName: "VOE", headers: { Referer: embedUrl, "User-Agent": DESKTOP_UA2 } };
-      }
-      return null;
+        return null;
+      });
     }
-    async function resolveVimeos(embedUrl, fetcher) {
-      const origin = (embedUrl.match(/^(https?:\/\/[^/]+)/) || [null, "https://vimeos.net"])[1] || "https://vimeos.net";
-      for (let attempt = 0; attempt < 3; attempt++) {
-        const html = await getPage(embedUrl, { Referer: "https://la.movie/tv/", "Accept-Language": "es-MX,es;q=0.9", Accept: HTML_ACCEPT }, fetcher);
+    function resolveVimeos(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        const origin = (embedUrl.match(/^(https?:\/\/[^/]+)/) || [null, "https://vimeos.net"])[1] || "https://vimeos.net";
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const html = yield getPage(embedUrl, { Referer: "https://la.movie/tv/", "Accept-Language": "es-MX,es;q=0.9", Accept: HTML_ACCEPT }, fetcher);
+          if (html === null) return null;
+          const unpacked = unpackPacked(html);
+          const master = unpacked !== null ? (unpacked.match(/file:"(https?:\/\/[^"]+\.m3u8[^"]*)"/) || [])[1] || (unpacked.match(/["'](https?:\/\/[^"']+\.m3u8[^"']*)['"]/) || [])[1] : void 0;
+          if (master === void 0) return null;
+          const iParam = (master.match(/[?&]i=([^&]*)/) || ["", ""])[1];
+          if (iParam === "0.0") {
+            return { url: master, quality: qualityFromUrl(master), serverName: "Vimeos", headers: { "User-Agent": DESKTOP_UA2, Referer: origin + "/", Origin: origin } };
+          }
+        }
+        return null;
+      });
+    }
+    function resolveLacloud(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        const html = yield getPage(embedUrl, { Referer: "https://lamovie.org/" }, fetcher);
+        if (html === null) return null;
+        const src = (html.match(/const src\s*=\s*["']([^"']+)["']/) || [])[1];
+        if (src === void 0) return null;
+        return { url: src, quality: qualityFromUrl(src), serverName: "Lacloud", headers: { Referer: embedUrl, "User-Agent": DESKTOP_UA2 } };
+      });
+    }
+    function resolvePacker(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        const html = yield getPage(embedUrl, { Referer: "https://lamovie.org/" }, fetcher);
         if (html === null) return null;
         const unpacked = unpackPacked(html);
-        const master = unpacked !== null ? (unpacked.match(/file:"(https?:\/\/[^"]+\.m3u8[^"]*)"/) || [])[1] || (unpacked.match(/["'](https?:\/\/[^"']+\.m3u8[^"']*)['"]/) || [])[1] : void 0;
-        if (master === void 0) return null;
-        const iParam = (master.match(/[?&]i=([^&]*)/) || ["", ""])[1];
-        if (iParam === "0.0") {
-          return { url: master, quality: qualityFromUrl(master), serverName: "Vimeos", headers: { "User-Agent": DESKTOP_UA2, Referer: origin + "/", Origin: origin } };
+        const stream = unpacked !== null ? (unpacked.match(/["'](https?:\/\/[^"']+\.m3u8[^"']*)["']/) || [])[1] || (unpacked.match(/["'](\/[^"']+\.m3u8[^"']*)["']/) || [])[1] || (unpacked.match(/file\s*:\s*["']([^"']+\.m3u8[^"']*)["']/i) || [])[1] : void 0;
+        if (stream === void 0) return null;
+        const target = absolute(stream, embedUrl);
+        return { url: target, quality: qualityFromUrl(target), serverName: "EarnVids", headers: { Referer: embedUrl, "User-Agent": DESKTOP_UA2 } };
+      });
+    }
+    function resolveDoodstream(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        const host = embedUrl.replace(/\/(d|f)\//, "/e/").replace("dsvplay.com", "d0000d.com");
+        const html = yield getPage(host, { Referer: "https://lamovie.org/", Origin: "https://lamovie.org" }, fetcher);
+        if (html === null) return null;
+        const match = html.match(/\$\.get\(['"](\/pass_md5\/[\w-]+\/([\w-]+))['"]/i);
+        if (match === null) return null;
+        const origin = host.split("/").slice(0, 3).join("/");
+        const base = yield getPage(origin + match[1], { Referer: host }, fetcher);
+        if (base === null || base === "") return null;
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        let padding = "";
+        for (let i = 0; i < 10; i++) padding += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+        const target = base + padding + "?token=" + match[2] + "&expiry=" + Date.now();
+        return { url: target, quality: "720p", serverName: "DoodStream", headers: { "User-Agent": DESKTOP_UA2, Referer: origin + "/" } };
+      });
+    }
+    function resolveUqload(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        const html = yield getPage(embedUrl, { Referer: "https://uqload.com/" }, fetcher);
+        if (html === null) return null;
+        let sources = (html.match(/sources\s*[=:]\s*\[([^\]]+)\]/) || [])[1];
+        if (sources === void 0) {
+          const unpacked = unpackPacked(html);
+          sources = unpacked !== null ? (unpacked.match(/sources\s*[=:]\s*\[([^\]]+)\]/) || [])[1] : void 0;
         }
-      }
-      return null;
+        if (sources === void 0) return null;
+        const url = (sources.match(/https?:\/\/[^\s"'<>]+/) || [])[0];
+        if (url === void 0) return null;
+        return { url, quality: qualityFromUrl(url), serverName: "Uqload", headers: { Referer: "https://uqload.com/", "User-Agent": DESKTOP_UA2 } };
+      });
     }
-    async function resolveLacloud(embedUrl, fetcher) {
-      const html = await getPage(embedUrl, { Referer: "https://lamovie.org/" }, fetcher);
-      if (html === null) return null;
-      const src = (html.match(/const src\s*=\s*["']([^"']+)["']/) || [])[1];
-      if (src === void 0) return null;
-      return { url: src, quality: qualityFromUrl(src), serverName: "Lacloud", headers: { Referer: embedUrl, "User-Agent": DESKTOP_UA2 } };
-    }
-    async function resolvePacker(embedUrl, fetcher) {
-      const html = await getPage(embedUrl, { Referer: "https://lamovie.org/" }, fetcher);
-      if (html === null) return null;
-      const unpacked = unpackPacked(html);
-      const stream = unpacked !== null ? (unpacked.match(/["'](https?:\/\/[^"']+\.m3u8[^"']*)["']/) || [])[1] || (unpacked.match(/["'](\/[^"']+\.m3u8[^"']*)["']/) || [])[1] || (unpacked.match(/file\s*:\s*["']([^"']+\.m3u8[^"']*)["']/i) || [])[1] : void 0;
-      if (stream === void 0) return null;
-      const target = absolute(stream, embedUrl);
-      return { url: target, quality: qualityFromUrl(target), serverName: "EarnVids", headers: { Referer: embedUrl, "User-Agent": DESKTOP_UA2 } };
-    }
-    async function resolveDoodstream(embedUrl, fetcher) {
-      const host = embedUrl.replace(/\/(d|f)\//, "/e/").replace("dsvplay.com", "d0000d.com");
-      const html = await getPage(host, { Referer: "https://lamovie.org/", Origin: "https://lamovie.org" }, fetcher);
-      if (html === null) return null;
-      const match = html.match(/\$\.get\(['"](\/pass_md5\/[\w-]+\/([\w-]+))['"]/i);
-      if (match === null) return null;
-      const origin = host.split("/").slice(0, 3).join("/");
-      const base = await getPage(origin + match[1], { Referer: host }, fetcher);
-      if (base === null || base === "") return null;
-      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-      let padding = "";
-      for (let i = 0; i < 10; i++) padding += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
-      const target = base + padding + "?token=" + match[2] + "&expiry=" + Date.now();
-      return { url: target, quality: "720p", serverName: "DoodStream", headers: { "User-Agent": DESKTOP_UA2, Referer: origin + "/" } };
-    }
-    async function resolveUqload(embedUrl, fetcher) {
-      const html = await getPage(embedUrl, { Referer: "https://uqload.com/" }, fetcher);
-      if (html === null) return null;
-      let sources = (html.match(/sources\s*[=:]\s*\[([^\]]+)\]/) || [])[1];
-      if (sources === void 0) {
-        const unpacked = unpackPacked(html);
-        sources = unpacked !== null ? (unpacked.match(/sources\s*[=:]\s*\[([^\]]+)\]/) || [])[1] : void 0;
-      }
-      if (sources === void 0) return null;
-      const url = (sources.match(/https?:\/\/[^\s"'<>]+/) || [])[0];
-      if (url === void 0) return null;
-      return { url, quality: qualityFromUrl(url), serverName: "Uqload", headers: { Referer: "https://uqload.com/", "User-Agent": DESKTOP_UA2 } };
-    }
-    async function resolveVidhide(embedUrl, fetcher) {
-      const parts = embedUrl.split("/");
-      const host = parts[2];
-      const html = await getPage(embedUrl, { Referer: "https://" + host + "/" }, fetcher);
-      if (html === null) return null;
-      let target = (html.match(/"hls[24]"\s*:\s*"([^"]+)"/) || [])[1] || (html.match(/file\s*:\s*["']([^"']+)["']/i) || [])[1] || null;
-      if (target === null) {
-        const unpacked = unpackPacked(html);
-        target = unpacked !== null ? (unpacked.match(/"hls[24]"\s*:\s*"([^"]+)"/) || [])[1] : null;
-      }
-      if (target === null) return null;
-      if (target.indexOf("http") !== 0) target = "https://" + host + target;
-      if (target.indexOf("referer=") === -1) target += (target.indexOf("?") === -1 ? "?" : "&") + "referer=embed69.org";
-      return {
-        url: target,
-        quality: qualityFromUrl(target),
-        serverName: "VidHide",
-        headers: { Referer: embedUrl.split("?")[0], Origin: "https://" + host, "X-Requested-With": "XMLHttpRequest", "User-Agent": DESKTOP_UA2 }
-      };
-    }
-    async function resolveZilla(embedUrl, fetcher) {
-      const id = (embedUrl.match(/\/play\/([a-fA-F0-9]{32})/) || embedUrl.match(/\/([a-fA-F0-9]{32})/) || [])[1];
-      const target = id !== void 0 ? "https://player.zilla-networks.com/m3u8/" + id : embedUrl.replace("/play/", "/m3u8/");
-      if (target.indexOf(".m3u8") === -1 && target.indexOf("/m3u8/") === -1) return null;
-      const headers = { "User-Agent": DESKTOP_UA2, Referer: "https://player.zilla-networks.com/", Origin: "https://player.zilla-networks.com" };
-      const quality = await probePlaylistQuality(target, headers, fetcher);
-      return { url: target, quality, serverName: "Zilla", headers };
-    }
-    async function resolveStreamtape(embedUrl, fetcher) {
-      const target = embedUrl.replace("/v/", "/e/");
-      const html = await getPage(target, { Referer: target }, fetcher);
-      if (html === null) return null;
-      const match = html.match(/document\.getElementById\(['"](?:robotlink|ideoolink|noroot)['"]\)\.innerHTML\s*=\s*['"]([^'"]+)['"]\s*\+\s*(?:\(['"]([^'"]+)['"]\)\.substring\((\d+)\)|['"]([^'"]+)['"])/i);
-      if (match === null) return null;
-      const tail = match[2] !== void 0 && match[3] !== void 0 ? match[2].substring(parseInt(match[3], 10)) : match[4] || "";
-      const url = "https:" + match[1] + tail;
-      return { url, quality: qualityFromUrl(url), serverName: "Streamtape", headers: { "User-Agent": DESKTOP_UA2, Referer: target } };
-    }
-    async function resolveMp4upload(embedUrl, fetcher) {
-      const html = await getPage(embedUrl, { Referer: "https://www.mp4upload.com/" }, fetcher);
-      if (html === null) return null;
-      const quality = /FHD|1080/.test(html) ? "1080p" : /HD|720/.test(html) ? "720p" : /SD|480/.test(html) ? "480p" : "1080p";
-      const unpacked = unpackPacked(html);
-      const fromPacked = unpacked !== null ? (unpacked.match(/https?:\/\/[^"'\s]+\.mp4[^"'\s]*/i) || [])[0] : void 0;
-      const direct = fromPacked !== void 0 ? fromPacked : (html.match(/https?:\/\/[a-zA-Z0-9.-]+\.mp4upload\.com(?::\d+)?\/[a-zA-Z0-9/._-]+\.mp4/i) || [])[0];
-      if (direct === void 0) return null;
-      return { url: direct, quality, serverName: "MP4Upload", headers: { "User-Agent": DESKTOP_UA2, Referer: embedUrl } };
-    }
-    async function resolveNyuu(embedUrl, fetcher) {
-      const html = await getPage(embedUrl, { Referer: embedUrl }, fetcher);
-      if (html === null) return null;
-      const unpacked = unpackPacked(html);
-      const source = unpacked !== null ? unpacked : html;
-      const url = (source.match(/https?:\/\/[^"'\s\\]+\.(?:m3u8|mp4)[^"'\s\\]*/i) || [])[0];
-      if (url === void 0) return null;
-      return { url, quality: qualityFromUrl(url), serverName: "Nyuu", headers: { "User-Agent": DESKTOP_UA2, Referer: embedUrl } };
-    }
-    async function probePlaylistQuality(url, headers, fetcher) {
-      try {
-        const response = await fetcher(url, { headers, redirect: "follow" });
-        if (!response.ok) return "Unknown";
-        const text = await response.text();
-        const matches = [];
-        const re = /RESOLUTION=\d+x(\d+)/gi;
-        let match;
-        while ((match = re.exec(text)) !== null) matches.push(parseInt(match[1], 10));
-        if (matches.length === 0) return qualityFromUrl(url);
-        const best = Math.max.apply(null, matches);
-        if (best >= 2160) return "4K";
-        if (best >= 1080) return "1080p";
-        if (best >= 720) return "720p";
-        if (best >= 480) return "480p";
-        return "360p";
-      } catch {
-        return qualityFromUrl(url);
-      }
-    }
-    var CryptoJS = require_crypto_js();
-    async function resolveFilemoon(embedUrl, fetcher) {
-      try {
+    function resolveVidhide(embedUrl, fetcher) {
+      return __async(this, null, function* () {
         const parts = embedUrl.split("/");
         const host = parts[2];
-        const videoId = parts.filter(Boolean).pop();
-        if (videoId === void 0 || host === void 0) return null;
-        const apiHeaders = { "X-Requested-With": "XMLHttpRequest", Referer: embedUrl, "User-Agent": DESKTOP_UA2 };
-        const details = await fetchJson2("https://" + host + "/api/videos/" + videoId + "/embed/details", { headers: apiHeaders, fetcher });
-        if (details === null || !details.embed_frame_url) return null;
-        const frame = details.embed_frame_url;
-        const playbackOrigin = frame.split("/").slice(0, 3).join("/");
-        const challenge = await fetchJson2(playbackOrigin + "/api/videos/access/challenge", { headers: Object.assign({}, apiHeaders, { Referer: frame, Origin: playbackOrigin }), fetcher });
-        if (challenge === null || !challenge.challenge_id) return null;
-        const viewerId = Math.random().toString(36).slice(2, 15);
-        const deviceId = Math.random().toString(36).slice(2, 15);
-        const attest = await postJson(playbackOrigin + "/api/videos/access/attest", {
-          viewer_id: viewerId,
-          device_id: deviceId,
-          challenge_id: challenge.challenge_id,
-          nonce: challenge.nonce,
-          signature: "MEUCIQDYi5fX9gG8_5t_4v8p_Q8o8l5v8v8v8v8v8v8v8v8v",
-          public_key: { kty: "EC", crv: "P-256", x: "thRcTF9d89tZ704lTYciJq48dtIaoqf9L0Is1gK29II", y: "v8Oo5z9N9406uE4RnU3dlmpbAaMQtt61uynn6kgz4_Q" },
-          client: { user_agent: DESKTOP_UA2, platform: "Windows", languages: ["es-ES"] },
-          storage: { cookie: viewerId, local_storage: viewerId },
-          attributes: { entropy: "high" }
-        }, Object.assign({}, apiHeaders, { Referer: frame, Origin: playbackOrigin }), fetcher);
-        if (attest === null || !attest.token) return null;
-        const playback = await postJson(playbackOrigin + "/api/videos/" + videoId + "/embed/playback", {
-          fingerprint: { token: attest.token, viewer_id: attest.viewer_id || viewerId, device_id: attest.device_id || deviceId, confidence: attest.confidence }
-        }, Object.assign({}, apiHeaders, { Referer: frame, Origin: playbackOrigin, "X-Embed-Parent": embedUrl }), fetcher);
-        if (playback === null || !playback.playback) return null;
-        const decrypted = decryptByse(playback.playback);
-        if (decrypted === null) return null;
-        const data = JSON.parse(decrypted);
-        const sources = Array.isArray(data.sources) ? data.sources : [];
-        const direct = sources[0] && sources[0].url || data.url;
-        if (direct === void 0) return null;
-        return { url: direct, quality: sources[0] && sources[0].label || "HD", serverName: "Filemoon", headers: { "User-Agent": DESKTOP_UA2, Referer: playbackOrigin, Origin: playbackOrigin } };
-      } catch {
-        return null;
-      }
+        const html = yield getPage(embedUrl, { Referer: "https://" + host + "/" }, fetcher);
+        if (html === null) return null;
+        let target = (html.match(/"hls[24]"\s*:\s*"([^"]+)"/) || [])[1] || (html.match(/file\s*:\s*["']([^"']+)["']/i) || [])[1] || null;
+        if (target === null) {
+          const unpacked = unpackPacked(html);
+          target = unpacked !== null ? (unpacked.match(/"hls[24]"\s*:\s*"([^"]+)"/) || [])[1] : null;
+        }
+        if (target === null) return null;
+        if (target.indexOf("http") !== 0) target = "https://" + host + target;
+        if (target.indexOf("referer=") === -1) target += (target.indexOf("?") === -1 ? "?" : "&") + "referer=embed69.org";
+        return {
+          url: target,
+          quality: qualityFromUrl(target),
+          serverName: "VidHide",
+          headers: { Referer: embedUrl.split("?")[0], Origin: "https://" + host, "X-Requested-With": "XMLHttpRequest", "User-Agent": DESKTOP_UA2 }
+        };
+      });
     }
-    async function postJson(url, body, headers, fetcher) {
-      try {
-        const response = await fetcher(url, { method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, headers), body: JSON.stringify(body) });
-        if (!response.ok) return null;
-        return await response.json();
-      } catch {
-        return null;
-      }
+    function resolveZilla(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        const id = (embedUrl.match(/\/play\/([a-fA-F0-9]{32})/) || embedUrl.match(/\/([a-fA-F0-9]{32})/) || [])[1];
+        const target = id !== void 0 ? "https://player.zilla-networks.com/m3u8/" + id : embedUrl.replace("/play/", "/m3u8/");
+        if (target.indexOf(".m3u8") === -1 && target.indexOf("/m3u8/") === -1) return null;
+        const headers = { "User-Agent": DESKTOP_UA2, Referer: "https://player.zilla-networks.com/", Origin: "https://player.zilla-networks.com" };
+        const quality = yield probePlaylistQuality(target, headers, fetcher);
+        return { url: target, quality, serverName: "Zilla", headers };
+      });
+    }
+    function resolveStreamtape(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        const target = embedUrl.replace("/v/", "/e/");
+        const html = yield getPage(target, { Referer: target }, fetcher);
+        if (html === null) return null;
+        const match = html.match(/document\.getElementById\(['"](?:robotlink|ideoolink|noroot)['"]\)\.innerHTML\s*=\s*['"]([^'"]+)['"]\s*\+\s*(?:\(['"]([^'"]+)['"]\)\.substring\((\d+)\)|['"]([^'"]+)['"])/i);
+        if (match === null) return null;
+        const tail = match[2] !== void 0 && match[3] !== void 0 ? match[2].substring(parseInt(match[3], 10)) : match[4] || "";
+        const url = "https:" + match[1] + tail;
+        return { url, quality: qualityFromUrl(url), serverName: "Streamtape", headers: { "User-Agent": DESKTOP_UA2, Referer: target } };
+      });
+    }
+    function resolveMp4upload(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        const html = yield getPage(embedUrl, { Referer: "https://www.mp4upload.com/" }, fetcher);
+        if (html === null) return null;
+        const quality = /FHD|1080/.test(html) ? "1080p" : /HD|720/.test(html) ? "720p" : /SD|480/.test(html) ? "480p" : "1080p";
+        const unpacked = unpackPacked(html);
+        const fromPacked = unpacked !== null ? (unpacked.match(/https?:\/\/[^"'\s]+\.mp4[^"'\s]*/i) || [])[0] : void 0;
+        const direct = fromPacked !== void 0 ? fromPacked : (html.match(/https?:\/\/[a-zA-Z0-9.-]+\.mp4upload\.com(?::\d+)?\/[a-zA-Z0-9/._-]+\.mp4/i) || [])[0];
+        if (direct === void 0) return null;
+        return { url: direct, quality, serverName: "MP4Upload", headers: { "User-Agent": DESKTOP_UA2, Referer: embedUrl } };
+      });
+    }
+    function resolveNyuu(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        const html = yield getPage(embedUrl, { Referer: embedUrl }, fetcher);
+        if (html === null) return null;
+        const unpacked = unpackPacked(html);
+        const source = unpacked !== null ? unpacked : html;
+        const url = (source.match(/https?:\/\/[^"'\s\\]+\.(?:m3u8|mp4)[^"'\s\\]*/i) || [])[0];
+        if (url === void 0) return null;
+        return { url, quality: qualityFromUrl(url), serverName: "Nyuu", headers: { "User-Agent": DESKTOP_UA2, Referer: embedUrl } };
+      });
+    }
+    function probePlaylistQuality(url, headers, fetcher) {
+      return __async(this, null, function* () {
+        try {
+          const response = yield fetcher(url, { headers, redirect: "follow" });
+          if (!response.ok) return "Unknown";
+          const text = yield response.text();
+          const matches = [];
+          const re = /RESOLUTION=\d+x(\d+)/gi;
+          let match;
+          while ((match = re.exec(text)) !== null) matches.push(parseInt(match[1], 10));
+          if (matches.length === 0) return qualityFromUrl(url);
+          const best = Math.max.apply(null, matches);
+          if (best >= 2160) return "4K";
+          if (best >= 1080) return "1080p";
+          if (best >= 720) return "720p";
+          if (best >= 480) return "480p";
+          return "360p";
+        } catch (e) {
+          return qualityFromUrl(url);
+        }
+      });
+    }
+    var CryptoJS = require_crypto_js();
+    function resolveFilemoon(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        try {
+          const parts = embedUrl.split("/");
+          const host = parts[2];
+          const videoId = parts.filter(Boolean).pop();
+          if (videoId === void 0 || host === void 0) return null;
+          const apiHeaders = { "X-Requested-With": "XMLHttpRequest", Referer: embedUrl, "User-Agent": DESKTOP_UA2 };
+          const details = yield fetchJson2("https://" + host + "/api/videos/" + videoId + "/embed/details", { headers: apiHeaders, fetcher });
+          if (details === null || !details.embed_frame_url) return null;
+          const frame = details.embed_frame_url;
+          const playbackOrigin = frame.split("/").slice(0, 3).join("/");
+          const challenge = yield fetchJson2(playbackOrigin + "/api/videos/access/challenge", { headers: Object.assign({}, apiHeaders, { Referer: frame, Origin: playbackOrigin }), fetcher });
+          if (challenge === null || !challenge.challenge_id) return null;
+          const viewerId = Math.random().toString(36).slice(2, 15);
+          const deviceId = Math.random().toString(36).slice(2, 15);
+          const attest = yield postJson(playbackOrigin + "/api/videos/access/attest", {
+            viewer_id: viewerId,
+            device_id: deviceId,
+            challenge_id: challenge.challenge_id,
+            nonce: challenge.nonce,
+            signature: "MEUCIQDYi5fX9gG8_5t_4v8p_Q8o8l5v8v8v8v8v8v8v8v8v",
+            public_key: { kty: "EC", crv: "P-256", x: "thRcTF9d89tZ704lTYciJq48dtIaoqf9L0Is1gK29II", y: "v8Oo5z9N9406uE4RnU3dlmpbAaMQtt61uynn6kgz4_Q" },
+            client: { user_agent: DESKTOP_UA2, platform: "Windows", languages: ["es-ES"] },
+            storage: { cookie: viewerId, local_storage: viewerId },
+            attributes: { entropy: "high" }
+          }, Object.assign({}, apiHeaders, { Referer: frame, Origin: playbackOrigin }), fetcher);
+          if (attest === null || !attest.token) return null;
+          const playback = yield postJson(playbackOrigin + "/api/videos/" + videoId + "/embed/playback", {
+            fingerprint: { token: attest.token, viewer_id: attest.viewer_id || viewerId, device_id: attest.device_id || deviceId, confidence: attest.confidence }
+          }, Object.assign({}, apiHeaders, { Referer: frame, Origin: playbackOrigin, "X-Embed-Parent": embedUrl }), fetcher);
+          if (playback === null || !playback.playback) return null;
+          const decrypted = decryptByse(playback.playback);
+          if (decrypted === null) return null;
+          const data = JSON.parse(decrypted);
+          const sources = Array.isArray(data.sources) ? data.sources : [];
+          const direct = sources[0] && sources[0].url || data.url;
+          if (direct === void 0) return null;
+          return { url: direct, quality: sources[0] && sources[0].label || "HD", serverName: "Filemoon", headers: { "User-Agent": DESKTOP_UA2, Referer: playbackOrigin, Origin: playbackOrigin } };
+        } catch (e) {
+          return null;
+        }
+      });
+    }
+    function postJson(url, body, headers, fetcher) {
+      return __async(this, null, function* () {
+        try {
+          const response = yield fetcher(url, { method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, headers), body: JSON.stringify(body) });
+          if (!response.ok) return null;
+          return yield response.json();
+        } catch (e) {
+          return null;
+        }
+      });
     }
     function decryptByse(playback) {
       try {
@@ -7164,7 +7222,7 @@ var require_resolvers = __commonJS({
         const decrypted = CryptoJS.AES.decrypt({ ciphertext }, key, { iv: counter, mode: CryptoJS.mode.CTR, padding: CryptoJS.pad.NoPadding });
         const text = decrypted.toString(CryptoJS.enc.Utf8);
         return text === "" ? null : text;
-      } catch {
+      } catch (e) {
         return null;
       }
     }
@@ -7184,16 +7242,18 @@ var require_resolvers = __commonJS({
       mp4upload: resolveMp4upload,
       nyuu: resolveNyuu
     };
-    async function resolveEmbed2(embedUrl, fetcher) {
-      const family = familyFor(embedUrl);
-      if (family === null || family === "filemoon") return null;
-      const resolver = RESOLVERS[family];
-      if (resolver === null || resolver === void 0) return null;
-      try {
-        return await resolver(embedUrl, fetcher);
-      } catch {
-        return null;
-      }
+    function resolveEmbed2(embedUrl, fetcher) {
+      return __async(this, null, function* () {
+        const family = familyFor(embedUrl);
+        if (family === null || family === "filemoon") return null;
+        const resolver = RESOLVERS[family];
+        if (resolver === null || resolver === void 0) return null;
+        try {
+          return yield resolver(embedUrl, fetcher);
+        } catch (e) {
+          return null;
+        }
+      });
     }
     module2.exports = { resolveEmbed: resolveEmbed2, serverLabelFor: serverLabelFor2, qualityFromUrl, DESKTOP_UA: DESKTOP_UA2 };
   }
@@ -7209,101 +7269,111 @@ var MATCH_THRESHOLD = 45;
 function stringValue(value) {
   return typeof value === "string" ? value.trim() : typeof value === "number" ? String(value) : "";
 }
-async function tmdbFind(id, type) {
-  const base = type === "movie" ? "movie" : "tv";
-  let tmdbId = null;
-  if (id.indexOf("tmdb:") === 0) tmdbId = id.split(":")[1];
-  else if (/^tt\d+$/.test(id)) {
-    const found = await fetchJson("https://api.themoviedb.org/3/find/" + encodeURIComponent(id) + "?external_source=imdb_id&api_key=439c478a771f35c05022f9feabcca01c");
-    const list = found !== null ? found[base === "movie" ? "movie_results" : "tv_results"] : null;
-    const first = Array.isArray(list) && typeof list[0] === "object" ? list[0] : null;
-    tmdbId = first !== null ? String(first.id) : null;
-  }
-  if (tmdbId === null || tmdbId === "") return null;
-  const detail = await fetchJson("https://api.themoviedb.org/3/" + base + "/" + tmdbId + "?language=es-MX&api_key=439c478a771f35c05022f9feabcca01c");
-  if (detail === null) return null;
-  const title = stringValue(detail[base === "movie" ? "title" : "name"]);
-  const originalTitle = stringValue(detail[base === "movie" ? "original_title" : "original_name"]);
-  if (title === "" && originalTitle === "") return null;
-  const date = stringValue(detail[base === "movie" ? "release_date" : "first_air_date"]);
-  return { title: title || originalTitle, originalTitle: originalTitle || title, year: date === "" ? null : date.slice(0, 4) };
-}
-async function searchPosts(keyword, fetcher) {
-  const query = keyword.slice(0, SEARCH_MAX);
-  const response = await fetchJson(API_BASE + "/search?postType=any&q=" + encodeURIComponent(query) + "&postsPerPage=20", {
-    headers: { Accept: "application/json", Referer: "https://lamovie.org/" },
-    fetcher
+function tmdbFind(id, type) {
+  return __async(this, null, function* () {
+    const base = type === "movie" ? "movie" : "tv";
+    let tmdbId = null;
+    if (id.indexOf("tmdb:") === 0) tmdbId = id.split(":")[1];
+    else if (/^tt\d+$/.test(id)) {
+      const found = yield fetchJson("https://api.themoviedb.org/3/find/" + encodeURIComponent(id) + "?external_source=imdb_id&api_key=439c478a771f35c05022f9feabcca01c");
+      const list = found !== null ? found[base === "movie" ? "movie_results" : "tv_results"] : null;
+      const first = Array.isArray(list) && typeof list[0] === "object" ? list[0] : null;
+      tmdbId = first !== null ? String(first.id) : null;
+    }
+    if (tmdbId === null || tmdbId === "") return null;
+    const detail = yield fetchJson("https://api.themoviedb.org/3/" + base + "/" + tmdbId + "?language=es-MX&api_key=439c478a771f35c05022f9feabcca01c");
+    if (detail === null) return null;
+    const title = stringValue(detail[base === "movie" ? "title" : "name"]);
+    const originalTitle = stringValue(detail[base === "movie" ? "original_title" : "original_name"]);
+    if (title === "" && originalTitle === "") return null;
+    const date = stringValue(detail[base === "movie" ? "release_date" : "first_air_date"]);
+    return { title: title || originalTitle, originalTitle: originalTitle || title, year: date === "" ? null : date.slice(0, 4) };
   });
-  if (response === null || response.data === null || response.data === void 0) return [];
-  return Array.isArray(response.data.posts) ? response.data.posts : [];
 }
-async function bestPostId(title, originalTitle, year, wantedType, fetcher) {
-  for (const keyword of [title, originalTitle]) {
-    if (keyword === "" || keyword === void 0) continue;
-    const posts = await searchPosts(keyword, fetcher);
-    let best = null;
-    for (const post of posts) {
-      if (post.type !== wantedType) continue;
-      const score = scoreCandidate(stringValue(post.title), title, originalTitle, year);
-      if (best === null || score > best.score) best = { id: String(post._id), score };
-    }
-    if (best !== null && best.score >= MATCH_THRESHOLD) return best.id;
-  }
-  return null;
-}
-async function getStreams(tmdbId, mediaType, season, episode) {
-  const type = mediaType === "tv" || mediaType === "series" ? "series" : "movie";
-  const id = String(tmdbId == null ? "" : tmdbId);
-  const fetcher = fetch;
-  try {
-    const info = await tmdbFind(id, type);
-    if (info === null) return [];
-    let postId = null;
-    if (type === "movie") {
-      postId = await bestPostId(info.title, info.originalTitle, info.year, "movies", fetcher);
-    } else {
-      if (season === null || season === void 0 || episode === null || episode === void 0) return [];
-      const showId = await bestPostId(info.title, info.originalTitle, info.year, "tvshows", fetcher);
-      if (showId === null) return [];
-      const list = await fetchJson(API_BASE + "/single/episodes/list?_id=" + encodeURIComponent(showId) + "&season=" + season + "&page=1&postsPerPage=50", {
-        headers: { Accept: "application/json", Referer: "https://lamovie.org/" },
-        fetcher
-      });
-      const posts = list !== null && list.data !== void 0 && Array.isArray(list.data.posts) ? list.data.posts : [];
-      for (const post of posts) {
-        if (Number(post.season_number) === Number(season) && Number(post.episode_number) === Number(episode)) {
-          postId = String(post._id);
-          break;
-        }
-      }
-    }
-    if (postId === null) return [];
-    const player = await fetchJson(API_BASE + "/player?postId=" + encodeURIComponent(postId) + "&demo=0", {
+function searchPosts(keyword, fetcher) {
+  return __async(this, null, function* () {
+    const query = keyword.slice(0, SEARCH_MAX);
+    const response = yield fetchJson(API_BASE + "/search?postType=any&q=" + encodeURIComponent(query) + "&postsPerPage=20", {
       headers: { Accept: "application/json", Referer: "https://lamovie.org/" },
       fetcher
     });
-    const data = player !== null && player.data !== void 0 ? player.data : {};
-    const embeds = Array.isArray(data.embeds) ? data.embeds : [];
-    const latino = embeds.filter((embed) => typeof embed.url === "string" && String(embed.lang || "").toLowerCase().indexOf("latino") !== -1);
-    const settled = await Promise.all(latino.map((embed) => resolveOne(embed)));
-    return settled.filter((stream) => stream !== null);
-  } catch (error) {
-    console.log("[lamovie] resolve failed: " + (error && error.message ? error.message : error));
-    return [];
-  }
-  async function resolveOne(embed) {
-    const resolved = await resolveEmbed(embed.url, fetcher).catch(() => null);
-    if (resolved === null) return null;
-    const quality = resolved.quality === "Unknown" ? embed.quality || "1080p" : resolved.quality;
-    const lang = embed.lang || "Latino";
-    return {
-      name: "LaMovie - " + quality,
-      title: lang + " - " + serverLabelFor(embed.url) + " " + quality,
-      url: resolved.url,
-      quality,
-      headers: Object.assign({ "User-Agent": DESKTOP_UA }, resolved.headers || {})
-    };
-  }
+    if (response === null || response.data === null || response.data === void 0) return [];
+    return Array.isArray(response.data.posts) ? response.data.posts : [];
+  });
+}
+function bestPostId(title, originalTitle, year, wantedType, fetcher) {
+  return __async(this, null, function* () {
+    for (const keyword of [title, originalTitle]) {
+      if (keyword === "" || keyword === void 0) continue;
+      const posts = yield searchPosts(keyword, fetcher);
+      let best = null;
+      for (const post of posts) {
+        if (post.type !== wantedType) continue;
+        const score = scoreCandidate(stringValue(post.title), title, originalTitle, year);
+        if (best === null || score > best.score) best = { id: String(post._id), score };
+      }
+      if (best !== null && best.score >= MATCH_THRESHOLD) return best.id;
+    }
+    return null;
+  });
+}
+function getStreams(tmdbId, mediaType, season, episode) {
+  return __async(this, null, function* () {
+    const type = mediaType === "tv" || mediaType === "series" ? "series" : "movie";
+    const id = String(tmdbId == null ? "" : tmdbId);
+    const fetcher = fetch;
+    try {
+      const info = yield tmdbFind(id, type);
+      if (info === null) return [];
+      let postId = null;
+      if (type === "movie") {
+        postId = yield bestPostId(info.title, info.originalTitle, info.year, "movies", fetcher);
+      } else {
+        if (season === null || season === void 0 || episode === null || episode === void 0) return [];
+        const showId = yield bestPostId(info.title, info.originalTitle, info.year, "tvshows", fetcher);
+        if (showId === null) return [];
+        const list = yield fetchJson(API_BASE + "/single/episodes/list?_id=" + encodeURIComponent(showId) + "&season=" + season + "&page=1&postsPerPage=50", {
+          headers: { Accept: "application/json", Referer: "https://lamovie.org/" },
+          fetcher
+        });
+        const posts = list !== null && list.data !== void 0 && Array.isArray(list.data.posts) ? list.data.posts : [];
+        for (const post of posts) {
+          if (Number(post.season_number) === Number(season) && Number(post.episode_number) === Number(episode)) {
+            postId = String(post._id);
+            break;
+          }
+        }
+      }
+      if (postId === null) return [];
+      const player = yield fetchJson(API_BASE + "/player?postId=" + encodeURIComponent(postId) + "&demo=0", {
+        headers: { Accept: "application/json", Referer: "https://lamovie.org/" },
+        fetcher
+      });
+      const data = player !== null && player.data !== void 0 ? player.data : {};
+      const embeds = Array.isArray(data.embeds) ? data.embeds : [];
+      const latino = embeds.filter((embed) => typeof embed.url === "string" && String(embed.lang || "").toLowerCase().indexOf("latino") !== -1);
+      const settled = yield Promise.all(latino.map((embed) => resolveOne(embed)));
+      return settled.filter((stream) => stream !== null);
+    } catch (error) {
+      console.log("[lamovie] resolve failed: " + (error && error.message ? error.message : error));
+      return [];
+    }
+    function resolveOne(embed) {
+      return __async(this, null, function* () {
+        const resolved = yield resolveEmbed(embed.url, fetcher).catch(() => null);
+        if (resolved === null) return null;
+        const quality = resolved.quality === "Unknown" ? embed.quality || "1080p" : resolved.quality;
+        const lang = embed.lang || "Latino";
+        return {
+          name: "LaMovie - " + quality,
+          title: lang + " - " + serverLabelFor(embed.url) + " " + quality,
+          url: resolved.url,
+          quality,
+          headers: Object.assign({ "User-Agent": DESKTOP_UA }, resolved.headers || {})
+        };
+      });
+    }
+  });
 }
 module.exports = { getStreams };
 /*! Bundled license information:

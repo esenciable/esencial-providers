@@ -33,3 +33,16 @@ Los providers son JS directo compatible con el runtime de Nuvio (sin `Buffer`,
 sin `node:crypto`, sin `URL.searchParams`). `lib/` es compartido:
 `http.js` (fetch con retry), `embeds.js` (decoders/calidades/familias),
 `resolvers.js` (estrategias por host), `titles.js` (slug + scoring).
+
+## Verificación de runtime (QuickJS)
+
+Los providers corren en el motor JS de Nuvio, no en Node: lo que funciona en Node puede fallar
+en el dispositivo. Para reproducirlo localmente:
+
+```bash
+node build.cjs                                # bundles ES2016 (sin async/await nativo)
+npm install --no-save quickjs-emscripten
+node tools/quickjs-check.mjs dist/magis.js tt2380307 movie
+```
+
+Resultado esperado: `hackstore 2 · magis 1 · sololatino 3 · cinecalidad 2`.

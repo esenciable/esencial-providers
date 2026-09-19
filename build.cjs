@@ -18,6 +18,8 @@ const scrapers = Array.isArray(manifest) ? manifest : manifest.scrapers;
       outfile,
       bundle: true,
       platform: 'browser',
+      // ES2016: async/await se baja a helpers con generadores, el estilo probado en TV.
+      target: 'es2016',
       format: 'cjs',
       minify: false,
       logLevel: 'silent',
