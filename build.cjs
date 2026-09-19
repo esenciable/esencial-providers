@@ -55,7 +55,13 @@ const scrapers = Array.isArray(manifest) ? manifest : manifest.scrapers;
       const header = `/** ${scraper.id} - built flat (prelude + body), no bundler. */\n`;
       const needsMagis = scraper.id === 'magis' || scraper.id === 'diag-magis';
       const extra = needsMagis ? magisConstantsBlock() + crypto3des + '\n' : '';
-      fs.writeFileSync(outfile, header + prelude + '\n' + extra + body);
+      // Minify the concatenated flat file: Nuvio's loader appears to have a size ceiling
+      // (~50KB: 40-43KB providers load, 56-62KB ones do not), and minification only removes
+      // comments/whitespace - no module wrappers, no bundling.
+      const esbuild = require('esbuild');
+      const flatSourceText = header + prelude + '\n' + extra + body;
+      const minified = await esbuild.transform(flatSourceText, { minify: true, target: 'es2016', loader: 'js' });
+      fs.writeFileSync(outfile, minified.code);
       console.log(`flat ${scraper.id} -> dist/${path.basename(scraper.filename)} (${fs.statSync(outfile).size} bytes)`);
       continue;
     }
