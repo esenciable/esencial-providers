@@ -19,7 +19,7 @@ const CASES = [
 ];
 
 for (const [name, tmdbId, type, season, episode, label] of CASES) {
-  const provider = require(`./providers/${name}.js`);
+  const provider = require(`./dist/${name}.js`);
   const startedAt = Date.now();
   try {
     const streams = await Promise.race([

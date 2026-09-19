@@ -14,7 +14,7 @@
         "movie",
         "tv"
       ],
-      "filename": "providers/magis.js",
+      "filename": "dist/magis.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -35,7 +35,7 @@
         "movie",
         "tv"
       ],
-      "filename": "providers/hackstore.js",
+      "filename": "dist/hackstore.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -55,7 +55,7 @@
         "movie",
         "tv"
       ],
-      "filename": "providers/lamovie.js",
+      "filename": "dist/lamovie.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -75,7 +75,7 @@
         "movie",
         "tv"
       ],
-      "filename": "providers/sololatino.js",
+      "filename": "dist/sololatino.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -96,7 +96,7 @@
         "movie",
         "tv"
       ],
-      "filename": "providers/areshd.js",
+      "filename": "dist/areshd.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -116,7 +116,7 @@
         "movie",
         "tv"
       ],
-      "filename": "providers/cinemitas.js",
+      "filename": "dist/cinemitas.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -136,7 +136,7 @@
         "movie",
         "tv"
       ],
-      "filename": "providers/megadede.js",
+      "filename": "dist/megadede.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -156,7 +156,7 @@
         "movie",
         "tv"
       ],
-      "filename": "providers/entre.js",
+      "filename": "dist/entre.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -175,7 +175,7 @@
       "supportedTypes": [
         "movie"
       ],
-      "filename": "providers/cinecalidad.js",
+      "filename": "dist/cinecalidad.js",
       "enabled": true,
       "contentLanguage": [
         "es"
