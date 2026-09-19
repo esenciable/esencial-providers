@@ -14,13 +14,43 @@ const scrapers = Array.isArray(manifest) ? manifest : manifest.scrapers;
  *  - otherwise            -> esbuild bundle (legacy, kept for reference). */
 (async () => {
   const prelude = fs.readFileSync(path.join(__dirname, 'lib', 'flat-prelude.js'), 'utf8');
+  const crypto3des = fs.readFileSync(path.join(__dirname, 'lib', 'flat-crypto3des.js'), 'utf8');
+
+  /** Operator constants for the Magis portal (public APK values + the portal 3DES key).
+   * Read from the environment first, else from the sibling addon .env. Never printed. */
+  function magisConstantsBlock() {
+    const fromEnv = {};
+    for (const key of ['MAGIS_HOSTS', 'MAGIS_APP_ID', 'MAGIS_APK_VERSION', 'MAGIS_3DES_KEY']) {
+      if (process.env[key]) fromEnv[key] = process.env[key];
+    }
+    const envPath = path.join(__dirname, '..', 'kino-light-addon', '.env');
+    if (Object.keys(fromEnv).length < 4 && fs.existsSync(envPath)) {
+      for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#') || !trimmed.includes('=')) continue;
+        const index = trimmed.indexOf('=');
+        const key = trimmed.slice(0, index).trim();
+        const value = trimmed.slice(index + 1).trim();
+        if (['MAGIS_HOSTS', 'MAGIS_APP_ID', 'MAGIS_APK_VERSION', 'MAGIS_3DES_KEY'].includes(key) && !fromEnv[key]) fromEnv[key] = value;
+      }
+    }
+    const hosts = (fromEnv.MAGIS_HOSTS || '').split(',').map(h => h.trim()).filter(Boolean);
+    return [
+      `var MAGIS_HOSTS = ${JSON.stringify(hosts)};`,
+      `var MAGIS_APP_ID = ${JSON.stringify(fromEnv.MAGIS_APP_ID || '')};`,
+      `var MAGIS_APK_VERSION = ${JSON.stringify(fromEnv.MAGIS_APK_VERSION || '')};`,
+      `var MAGIS_3DES_KEY = ${JSON.stringify(fromEnv.MAGIS_3DES_KEY || '')};`,
+      '',
+    ].join('\n');
+  }
   for (const scraper of scrapers) {
     const flatSource = path.join(__dirname, 'flat', `${scraper.id}.js`);
     const outfile = path.join(__dirname, 'dist', path.basename(scraper.filename));
     if (fs.existsSync(flatSource)) {
       const body = fs.readFileSync(flatSource, 'utf8');
       const header = `/** ${scraper.id} - built flat (prelude + body), no bundler. */\n`;
-      fs.writeFileSync(outfile, header + prelude + '\n' + body);
+      const extra = scraper.id === 'magis' ? magisConstantsBlock() + crypto3des + '\n' : '';
+      fs.writeFileSync(outfile, header + prelude + '\n' + extra + body);
       console.log(`flat ${scraper.id} -> dist/${path.basename(scraper.filename)} (${fs.statSync(outfile).size} bytes)`);
       continue;
     }

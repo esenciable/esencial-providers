@@ -99,7 +99,7 @@
         "tv"
       ],
       "filename": "dist/magis.js",
-      "enabled": false,
+      "enabled": true,
       "contentLanguage": [
         "es"
       ],
