@@ -49,7 +49,8 @@ const scrapers = Array.isArray(manifest) ? manifest : manifest.scrapers;
     if (fs.existsSync(flatSource)) {
       const body = fs.readFileSync(flatSource, 'utf8');
       const header = `/** ${scraper.id} - built flat (prelude + body), no bundler. */\n`;
-      const extra = scraper.id === 'magis' ? magisConstantsBlock() + crypto3des + '\n' : '';
+      const needsMagis = scraper.id === 'magis' || scraper.id === 'diag-magis';
+      const extra = needsMagis ? magisConstantsBlock() + crypto3des + '\n' : '';
       fs.writeFileSync(outfile, header + prelude + '\n' + extra + body);
       console.log(`flat ${scraper.id} -> dist/${path.basename(scraper.filename)} (${fs.statSync(outfile).size} bytes)`);
       continue;

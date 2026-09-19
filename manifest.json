@@ -47,6 +47,27 @@
       "supportsExternalPlayer": true
     },
     {
+      "id": "diag-magis",
+      "name": "Diag Magis",
+      "description": "Diagnóstico del portal Magis en el dispositivo (tiempos y errores en el título).",
+      "version": "1.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "dist/diag-magis.js",
+      "enabled": true,
+      "logo": "",
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8"
+      ],
+      "supportsExternalPlayer": true
+    },
+    {
       "id": "hackstore-plain",
       "name": "HackStore",
       "description": "HackStore en archivo plano (sin bundler, sin async/await) - test A/B del runtime.",
