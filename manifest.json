@@ -312,7 +312,7 @@
       "id": "seriesmetro",
       "name": "SeriesMetro",
       "description": "Películas y series de SeriesMetro (trembed + admin-ajax). Servidores Latinos.",
-      "version": "4.0.0",
+      "version": "4.1.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
@@ -335,7 +335,7 @@
       "id": "seriesflix",
       "name": "SeriesFlix",
       "description": "Series de SeriesFlix (data-url base64 + unwrap). Servidores Latinos.",
-      "version": "4.0.0",
+      "version": "4.1.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
@@ -358,7 +358,7 @@
       "id": "cu3v4n4",
       "name": "Cuevana3",
       "description": "Películas y series de Cuevana3 (token XOR + Hyper/Filemoon/Nebula/Doodstream).",
-      "version": "4.0.0",
+      "version": "4.1.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",

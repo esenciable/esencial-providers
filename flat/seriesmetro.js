@@ -152,12 +152,14 @@ function getStreams(tmdbId, mediaType, season, episode) {
               title: row.lang + ' - ' + (row.server || flatServerLabel(row.url)) + ' ' + quality,
               url: resolved.url,
               quality: quality,
+              lang: row.lang,
               headers: Object.assign({ 'User-Agent': FLAT_UA }, resolved.headers || {}),
             };
           }).catch(function () { return null; });
         });
         return Promise.all(promises).then(function (list) {
-          return list.filter(function (item) { return item !== null; });
+          // Ranking estilo Kino Latino: idioma, calidad (4K al final), servidor fiable, cap 10.
+          return flatRankStreams(list.filter(function (item) { return item !== null; }));
         });
       });
     });

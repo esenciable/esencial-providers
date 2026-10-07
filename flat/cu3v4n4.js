@@ -231,21 +231,21 @@ function getStreams(tmdbId, mediaType, season, episode) {
         return cu3ResolveWrapper(wrapper, key);
       });
       return Promise.all(promises).then(function (list) {
-        var seen = {};
         var out = [];
         for (var i = 0; i < list.length; i++) {
           var item = list[i];
-          if (item === null || seen[item.url]) continue;
-          seen[item.url] = true;
+          if (item === null) continue;
           out.push({
             name: 'Cuevana3 - ' + item.quality,
             title: item.lang + ' - ' + item.serverName + ' ' + item.quality,
             url: item.url,
             quality: item.quality,
+            lang: item.lang,
             headers: item.headers,
           });
         }
-        return out;
+        // Ranking estilo Kino Latino: idioma, calidad (4K al final), servidor fiable, cap 10 + dedupe por URL.
+        return flatRankStreams(out);
       });
     });
   }).catch(function (error) {

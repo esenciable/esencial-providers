@@ -166,12 +166,14 @@ function getStreams(tmdbId, mediaType, season, episode) {
             title: sflLangOf(task.lang) + ' - ' + (resolved.serverName || task.server || flatServerLabel(task.url)) + ' ' + quality,
             url: resolved.url,
             quality: quality,
+            lang: sflLangOf(task.lang),
             headers: Object.assign({ 'User-Agent': FLAT_UA }, resolved.headers || {}),
           };
         }).catch(function () { return null; });
       });
       return Promise.all(promises).then(function (list) {
-        return list.filter(function (item) { return item !== null; });
+        // Ranking estilo Kino Latino: idioma, calidad (4K al final), servidor fiable, cap 10 + dedupe por URL.
+        return flatRankStreams(list.filter(function (item) { return item !== null; }));
       });
     });
   }).catch(function (error) {
