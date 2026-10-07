@@ -18,6 +18,7 @@
 - [x] P2 — **seriesflix** (commit `cfdf5c9`): data-url base64 + iframe unwrap + cadenas nuevas nupload (int-array) y voe.sx (JS-redirect). Live: BB S1E1 3 (VOE); Coco 0 — el sitio es series-only hoy (verificado curl), código movie defensivo.
 - [x] P3 — **cu3v4n4** (commit `cfdf5c9`): XOR dinámico + token protocol (Hyper/Filemoon/Nebula/Doodstream) + packer; nota: el sitio ahora usa SLUGS (no el esquema numérico-TMDB del bundle viejo). Live: Coco 3, BB S1E1 2 (acek-cdn).
 - [ ] P4 — **zoowomaniacos + peliserieshoy** (opcionales; peliserieshoy off por defecto como en latino).
+- [x] P5 — Ranking + copias (`268e266`): `flatRankStreams` en el prelude (additivo, puente de test protegido) — lat>esp>sub>cast>otro, 1080>720>480 con 4K al final, familias confiables primero, cap 10; aplicado a seriesmetro/seriesflix/cu3v4n4; test sintético 17 checks + harness vivo sin regresiones. Magis client-side ya resuelve (Coco + BB vía buec.kyalbhxgw.com).
 - [ ] P5 — Copias alternativas (`alternatives` con refs perezosas ≤8), ranking por idioma (lat > esp > sub) y calidad (1080 primero, 4K al final salvo preferencia).
 - [ ] P6 — Verificación en dispositivo (Coco tt2380307 + Breaking Bad S1E1 + 1 título por source nuevo) y bump de versiones cache-bust.
 
