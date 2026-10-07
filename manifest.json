@@ -307,6 +307,75 @@
       "supportsExternalPlayer": true,
       "logo": "",
       "limited": false
+    },
+    {
+      "id": "seriesmetro",
+      "name": "SeriesMetro",
+      "description": "Películas y series de SeriesMetro (trembed + admin-ajax). Servidores Latinos.",
+      "version": "4.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "dist/seriesmetro-v4.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8",
+        "mp4"
+      ],
+      "supportsExternalPlayer": true,
+      "logo": "",
+      "limited": false
+    },
+    {
+      "id": "seriesflix",
+      "name": "SeriesFlix",
+      "description": "Series de SeriesFlix (data-url base64 + unwrap). Servidores Latinos.",
+      "version": "4.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "dist/seriesflix-v4.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8",
+        "mp4"
+      ],
+      "supportsExternalPlayer": true,
+      "logo": "",
+      "limited": false
+    },
+    {
+      "id": "cu3v4n4",
+      "name": "Cuevana3",
+      "description": "Películas y series de Cuevana3 (token XOR + Hyper/Filemoon/Nebula/Doodstream).",
+      "version": "4.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "dist/cu3v4n4-v4.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8",
+        "mp4"
+      ],
+      "supportsExternalPlayer": true,
+      "logo": "",
+      "limited": false
     }
   ]
 }

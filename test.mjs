@@ -4,8 +4,13 @@ import { readFileSync, existsSync } from 'node:fs';
 const require = createRequire(import.meta.url);
 
 // Resolve each scraper id to its cache-busted dist filename via the manifest.
-const manifest = JSON.parse(readFileSync(new URL('./manifest.json', import.meta.url), 'utf8'));
-const scrapers = Array.isArray(manifest) ? manifest : manifest.scrapers;
+let scrapers = [];
+try {
+  const manifest = JSON.parse(readFileSync(new URL('./manifest.json', import.meta.url), 'utf8'));
+  scrapers = Array.isArray(manifest) ? manifest : manifest.scrapers;
+} catch (error) {
+  console.log(`manifest no legible: ${error.message}`);
+}
 const distFile = Object.fromEntries(scrapers.map(s => [s.id, `./dist/${s.filename.split('/').pop()}`]));
 
 const CASES = [
@@ -19,9 +24,15 @@ const CASES = [
   ['megadede', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
   ['entre', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
   ['cinecalidad', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
+  ['seriesmetro', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
+  ['seriesflix', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
+  ['cu3v4n4', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
   ['hackstore', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
   ['lamovie', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
   ['areshd', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
+  ['seriesmetro', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
+  ['seriesflix', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
+  ['cu3v4n4', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
 ];
 
 for (const [name, tmdbId, type, season, episode, label] of CASES) {
