@@ -6,6 +6,13 @@
 var DIAG_SAMPLE = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
 var DIAG_PATH = 'v3/snToken';
 var DIAG_BEAN = { hardwareInfo: 'ranchu', model: 'sdk_gphone64_arm64', product: 'sdk_gphone64_arm64', cpu: 'arm64-v8a' };
+/** Offline parity check: the wire this runtime produces for a FIXED plaintext must equal the
+ * wire Node's implementation produces (`node lib/flat-crypto3des.js` + the real key). The plugin
+ * works from Node, so a mismatch here means the device runtime breaks the pure-JS 3DES — which
+ * the portal answers with portal200001 (`版本已停止使用`) because it cannot read the body.
+ * Regenerate with: magisEncryptBody('magis-diag-parity-v1', MAGIS_3DES_KEY). */
+var DIAG_PARITY_PLAIN = 'magis-diag-parity-v1';
+var DIAG_PARITY_WIRE = '30364e4771506c76706635776949527546357554737871432b4c586a37646d43';
 
 function diagPlainBody() {
   var body = { loginType: '2', appLanguage: 'en', apkVersion: MAGIS_APK_VERSION, sysVersion: '2025-08-07 05:40:11_36_16_', appId: MAGIS_APP_ID, hardwareInfo: 'ranchu', model: 'sdk_gphone64_arm64', product: 'sdk_gphone64_arm64', cpu: 'arm64-v8a', B29: '', reserve1: '', deviceToken: '', sn: '', drmId: '', sdkVer: 36 };
@@ -69,6 +76,19 @@ function diagLog(line) {
 
 function getStreams(tmdbId, mediaType, season, episode) {
   var lines = ['MAGIS_LADDER hosts=' + MAGIS_HOSTS.length + ' XHR=' + (typeof XMLHttpRequest) + ' Headers=' + (typeof Headers)];
+  // Rung 0, offline: is the crypto this runtime produces even the same bytes Node produces?
+  try {
+    var parity = magisEncryptBody(DIAG_PARITY_PLAIN, MAGIS_3DES_KEY);
+    var parityLine = 'crypto parity: ' + (parity === DIAG_PARITY_WIRE
+      ? '✅ coincide'
+      : '❌ DIFERENTE (got ' + String(parity).slice(0, 24) + '… esperado ' + DIAG_PARITY_WIRE.slice(0, 24) + '…)');
+    lines.push(parityLine);
+    diagLog(parityLine);
+  } catch (e) {
+    var parityErr = '❌ crypto parity lanzó: ' + (e && e.message ? e.message : String(e));
+    lines.push(parityErr);
+    diagLog(parityErr);
+  }
   var wire = magisEncryptBody(diagPlainBody(), MAGIS_3DES_KEY);
   var transports = [
     ['fetch headers obj', function (url) { return tryFetchA(url, wire); }],
