@@ -1,6 +1,12 @@
 // Local logic verification (the real playback test happens in Nuvio on-device).
 import { createRequire } from 'node:module';
+import { readFileSync, existsSync } from 'node:fs';
 const require = createRequire(import.meta.url);
+
+// Resolve each scraper id to its cache-busted dist filename via the manifest.
+const manifest = JSON.parse(readFileSync(new URL('./manifest.json', import.meta.url), 'utf8'));
+const scrapers = Array.isArray(manifest) ? manifest : manifest.scrapers;
+const distFile = Object.fromEntries(scrapers.map(s => [s.id, `./dist/${s.filename.split('/').pop()}`]));
 
 const CASES = [
   ['magis', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
@@ -19,7 +25,11 @@ const CASES = [
 ];
 
 for (const [name, tmdbId, type, season, episode, label] of CASES) {
-  const provider = require(`./dist/${name}.js`);
+  if (!distFile[name] || !existsSync(new URL(distFile[name], import.meta.url))) {
+    console.log(`${name.padEnd(12)} SKIP (disabled o sin dist)`);
+    continue;
+  }
+  const provider = require(distFile[name]);
   const startedAt = Date.now();
   try {
     const streams = await Promise.race([
