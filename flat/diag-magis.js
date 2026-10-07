@@ -1,7 +1,8 @@
 /** diag-magis - probes HOW headers survive the device network bridge.
  * The portal rejects requests without the `apk`/`apkVer` headers (proven: portal200001),
  * and the TV seems to drop them, so this tries several transports and reports which one
- * the portal accepts. */
+ * the portal accepts. Every rung reports its verdict to logcat (tag `Plugin:<id>:diag-magis`)
+ * so the ladder is readable without the UI, and a synchronous throw is a verdict, not a crash. */
 var DIAG_SAMPLE = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
 var DIAG_PATH = 'v3/snToken';
 var DIAG_BEAN = { hardwareInfo: 'ranchu', model: 'sdk_gphone64_arm64', product: 'sdk_gphone64_arm64', cpu: 'arm64-v8a' };
@@ -62,29 +63,47 @@ function tryXhr(url, wire, withHeaders) {
   });
 }
 
+function diagLog(line) {
+  try { if (typeof console !== 'undefined' && console.log) console.log('[diag-magis] ' + line); } catch (e) {}
+}
+
 function getStreams(tmdbId, mediaType, season, episode) {
   var lines = ['MAGIS_LADDER hosts=' + MAGIS_HOSTS.length + ' XHR=' + (typeof XMLHttpRequest) + ' Headers=' + (typeof Headers)];
   var wire = magisEncryptBody(diagPlainBody(), MAGIS_3DES_KEY);
-  var url = 'https://' + MAGIS_HOSTS[0] + '/api/portalCore/' + DIAG_PATH;
   var transports = [
-    ['fetch headers obj', function () { return tryFetchA(url, wire); }],
-    ['fetch minúsculas', function () { return tryFetchLower(url, wire); }],
-    ['fetch Headers()', function () { return tryFetchHeadersObject(url, wire); }],
-    ['XHR con headers', function () { return tryXhr(url, wire, true); }],
-    ['XHR sin headers', function () { return tryXhr(url, wire, false); }],
+    ['fetch headers obj', function (url) { return tryFetchA(url, wire); }],
+    ['fetch minúsculas', function (url) { return tryFetchLower(url, wire); }],
+    ['fetch Headers()', function (url) { return tryFetchHeadersObject(url, wire); }],
+    ['XHR con headers', function (url) { return tryXhr(url, wire, true); }],
+    ['XHR sin headers', function (url) { return tryXhr(url, wire, false); }],
   ];
   var index = 0;
   var winner = null;
   function next() {
     if (index >= transports.length || winner) {
       lines.push(winner ? 'GANADOR: ' + winner : 'NINGUNO pasó los headers');
-      return Promise.resolve([{ name: 'Diag Magis', title: lines.join('\n'), url: DIAG_SAMPLE, quality: '720p', headers: {} }]);
+      var report = lines.join('\n');
+      for (var l = 0; l < lines.length; l++) diagLog(lines[l]);
+      return Promise.resolve([{ name: 'Diag Magis', title: report, url: DIAG_SAMPLE, quality: '720p', headers: {} }]);
     }
     var entry = transports[index++];
     var started = Date.now();
-    return entry[1]().then(function (json) {
+    var host = MAGIS_HOSTS[0];
+    var url = 'https://' + host + '/api/portalCore/' + DIAG_PATH;
+    // The call MUST be wrapped: `new Headers()` throws SYNCHRONOUSLY in runtimes without the
+    // constructor, and an unwrapped throw killed the whole ladder before the XHR rungs ever ran
+    // (observed on device: "getStreams error: Headers is not defined").
+    var attempt;
+    try {
+      attempt = Promise.resolve(entry[1](url));
+    } catch (e) {
+      attempt = Promise.resolve({ error: 'lanzó: ' + (e && e.message ? e.message : String(e)) });
+    }
+    return attempt.then(function (json) {
       var verdict = json && json.error ? '❌ ' + json.error : diagVerdict(json);
-      lines.push(entry[0] + ': ' + verdict + ' (' + (Date.now() - started) + 'ms)');
+      var line = entry[0] + ': ' + verdict + ' (' + (Date.now() - started) + 'ms)';
+      lines.push(line);
+      diagLog(line);
       if (verdict.indexOf('ACEPTADO') !== -1 && winner === null) winner = entry[0];
       return next();
     });
