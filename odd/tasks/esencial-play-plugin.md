@@ -14,9 +14,9 @@
 - Magis: core client-side ya portado; diagnóstico v4 en curso (transport ladder de headers por el bridge).
 
 ## Tareas
-- [ ] P1 — **seriesmetro** (nuevo): HTML/API admin-ajax `trembed=` → embeds; reusar titles.js + resolvers.
-- [ ] P2 — **seriesflix** (nuevo): `data-url` base64 + unwrap `iframe?url=`.
-- [ ] P3 — **cu3v4n4 / Cuevana** (nuevo): clave XOR dinámica (UUID del HTML) + token protocol (char[0] = server: Hyper/Filemoon/Nebula/Doodstream) + fetch iframe (Referer = página, 8 s) + regex m3u8/mp4/packer. Headers finales: Referer=iframeUrl, Origin, UA, Accept.
+- [x] P1 — **seriesmetro** (commit `cfdf5c9`): trembed iframes + admin-ajax episode flow. Live: Coco 1, BB S1E1 3 (fastream).
+- [x] P2 — **seriesflix** (commit `cfdf5c9`): data-url base64 + iframe unwrap + cadenas nuevas nupload (int-array) y voe.sx (JS-redirect). Live: BB S1E1 3 (VOE); Coco 0 — el sitio es series-only hoy (verificado curl), código movie defensivo.
+- [x] P3 — **cu3v4n4** (commit `cfdf5c9`): XOR dinámico + token protocol (Hyper/Filemoon/Nebula/Doodstream) + packer; nota: el sitio ahora usa SLUGS (no el esquema numérico-TMDB del bundle viejo). Live: Coco 3, BB S1E1 2 (acek-cdn).
 - [ ] P4 — **zoowomaniacos + peliserieshoy** (opcionales; peliserieshoy off por defecto como en latino).
 - [ ] P5 — Copias alternativas (`alternatives` con refs perezosas ≤8), ranking por idioma (lat > esp > sub) y calidad (1080 primero, 4K al final salvo preferencia).
 - [ ] P6 — Verificación en dispositivo (Coco tt2380307 + Breaking Bad S1E1 + 1 título por source nuevo) y bump de versiones cache-bust.
