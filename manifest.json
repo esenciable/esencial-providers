@@ -15,7 +15,7 @@
         "tv"
       ],
       "filename": "dist/magis-v4.js",
-      "enabled": false,
+      "enabled": true,
       "contentLanguage": [
         "es"
       ],
