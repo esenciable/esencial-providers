@@ -71,8 +71,9 @@ Ajustar el repo de plugins a lo que el dueño realmente usa: **pocos resultados 
 - [x] **S4 — Velocidad de Magis**: `Promise.all([magisActivate(), flatTmdbInfo(...)])` (TMDB no depende
       de la sesión) + `pageSize` 20→10. Medido: Coco 1.5s → **1.0s**, Breaking Bad 2.0s → **1.1s**.
       La semántica de error se conservó (si cualquiera falla, el catch devuelve `[]`).
-- [ ] **S1 — hackstore-plain: PORT FALLIDO, revertido** (ver abajo). Los filtros SÍ están aplicados a
-      cinemitas, seriesmetro y embed69.
+- [x] **S1 — hackstore-plain: port reparado y vuelto a activar** (ver abajo). Los filtros SÍ están
+      aplicados a cinemitas, seriesmetro y embed69 (y a hackstore-plain: el GoodStream que el
+      standalone devolvía se cae por el allowlist del dueño, como estaba decidido).
 
 ## hackstore-plain: el port rompió el proveedor (evidencia)
 El port `flat/hackstore-plain.js` (prelude + cuerpo) **devuelve 0 streams**; el standalone
@@ -83,18 +84,40 @@ El port `flat/hackstore-plain.js` (prelude + cuerpo) **devuelve 0 streams**; el 
 | `providers/hackstore-plain.js` (origen) | **2 streams en 3.0s** (Latino - Vimeos HD) | **2 streams en 1.7s** |
 | `flat/hackstore-plain.js` (port) | **0 streams en 13.4s** | **0 streams en 2.0s** |
 
-**Causa**: no son las llamadas a la API (son idénticas: `/api/rest/single?post_name=`, 
-`/api/rest/player?post_id=`, mismos headers). Es el **resolve**: el original resuelve Vimeos con
-`Referer: https://vimeos.net/` + `Accept: text/html` y reintentos propios (Vimeos devuelve `i=0.0`),
-mientras el prelude resuelve Vimeos con `Referer: https://lamovie.org/` **hardcodeado para LaMovie**.
-Con ese referer Vimeos no contesta y el port cae en `[]` (peor: `flatJson` **traga el error y devuelve
-`null`**, así que el fallo es silencioso).
+**Causa**: no eran solo las llamadas a la API (esas son idénticas). Eran DOS cosas en el resolve:
+1. **Referer**: el original resuelve Vimeos con `Referer: https://vimeos.net/` + `Accept: text/html`;
+   el prelude usaba `Referer: https://lamovie.org/` hardcodeado para LaMovie. Con el referer
+   equivocado Vimeos a veces no contesta.
+2. **El parámetro `i` del master m3u8 (la mitad silenciosa)**: Vimeos hoy responde `i=0.3`. El
+   original se queda con el PRIMER master m3u8 que encuentra; el bucle de reintento del prelude
+   (pensado para LaMovie, que sirve `i=0.0`) descartaba el master `i=0.3` tras 3 rondas y devolvía
+   `null` — y `flatJson`/el catch tragaban el error, así que el fallo no dejaba rastro.
 
-**Cómo se cerró**: el manifest volvió a apuntar al standalone probado (nada roto en producción) y el
-port queda pendiente de esta tarea. **Fix correcto**: hacer configurable el referer del resolver de
-Vimeos (parámetro opcional con el default actual de LaMovie, para no cambiar el comportamiento de
-lamovie/cinemitas/seriesmetro) y que hackstore pase el suyo. **Criterio de aceptación = el A/B de la
-tabla de arriba**, no el reporte de un agente: el port tiene que dar ≥ los mismos streams que el origen.
+**Cómo se arregló (2026-10-08)**:
+- `flatResolveVimeos(embedUrl, opts)` ahora acepta `opts.referer` (default `https://lamovie.org/`),
+  `opts.accept` (default: Accept-Language es-MX como hoy) y `opts.firstMatch` (default false:
+  sin opts el bucle de reintento de LaMovie queda intacto, verificado offline con fetch stub).
+- `flatResolveEmbed(embedUrl, opts)` reenvía opts (hoy solo lo honra la familia vimeos) y REGISTRA
+  todo fallo de resolve por consola (`[flat] resolve sin resultado (...)`): se acabó el `[]` mudo.
+- `flat/hackstore-plain.js` pasa `{ referer: 'https://vimeos.net/', accept: 'text/html', firstMatch: true }`,
+  espejo exacto del standalone.
+
+**A/B tras el fix** (mismo día, mismos títulos; URLs iguales salvo el token fresco de cada petición):
+
+| implementación | Coco | Breaking Bad S1E1 |
+|---|---|---|
+| `providers/hackstore-plain.js` (origen) | 2 en 3.3s (Vimeos + GoodStream) | 2 en 1.5s (Vimeos + GoodStream) |
+| port reparado | **1 en 2.7s (Vimeos, misma URL master)** | **1 en 1.9s (Vimeos, misma URL master)** |
+
+El port da exactamente el stream Vimeos del origen (mismo master `_,n,h,.urlset/master.m3u8`).
+La diferencia 2 vs 1 es el **GoodStream, que el allowlist del dueño (S1) descarta a propósito**:
+`flatResolveGoodstream` del prelude sí lo resuelve (verificado), pero `flatOwnerServerOk` solo deja
+pasar uqload/vimeos/Online-HD. Etiqueta: el port dice `Latino - Vimeos 720p` (calidad real leída del
+ladder de la URL) donde el origen dice `Vimeos HD` (su `qualityFromUrl` no lee el ladder); mismo
+stream, etiqueta más precisa.
+
+`hackstore-plain` vuelve a apuntar a `dist/hackstore-plain-v4.js` (28.7KB) y `node test.mjs` queda
+verde (selftest offline del resolver incluido).
 
 ## Nota sobre el `limit`
 `limit: 4` en el ranking compartido (antes 10). Con 5 proveedores el peor caso son ≤20 entradas, y en

@@ -100,7 +100,7 @@
         "movie",
         "tv"
       ],
-      "filename": "providers/hackstore-plain.js",
+      "filename": "dist/hackstore-plain-v4.js",
       "enabled": true,
       "logo": "",
       "contentLanguage": [

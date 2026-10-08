@@ -40,6 +40,46 @@ check('latino before unlabeled', prelude.flatRankStreams([
   { title: 'Latino - Uqload 720p', url: 'https://strm5.uqload.vc/abc.m3u8', quality: '720p' },
 ], ownerOpts).map(s => s.title), ['Latino - Uqload 720p', 'Online 1080p']);
 check('default limit unchanged', prelude.flatRankStreams(many).length, 9);
+
+console.log('--- selftest flatResolveVimeos configurable (hackstore-plain, offline) ---');
+// Stub de fetch: el resolver debe seguir enviando el referer de LaMovie por defecto y aceptar
+// el referer/Accept propios de HackStore (el standalone providers/hackstore-plain.js usa
+// Referer https://vimeos.net/ + Accept text/html y se queda con el PRIMER master m3u8,
+// sin el bucle de reintento por el parámetro i que usa LaMovie).
+{
+  const realFetch = globalThis.fetch;
+  const MASTER = 'https://s14.vimeos.net/hls2/03/00000/4300knyazv7g_,n,h,.urlset/master.m3u8?t=x&s=1&e=2&v=3';
+  const HTML_I03 = '<html>file:"' + MASTER + '&i=0.3&sp=0"</html>';
+  const HTML_I00 = '<html>file:"' + MASTER + '&i=0.0&sp=0"</html>';
+  let calls = [];
+  const stub = (html) => {
+    calls = [];
+    globalThis.fetch = (url, init) => {
+      calls.push({ url, headers: (init && init.headers) || {} });
+      return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(html) });
+    };
+  };
+  try {
+    stub(HTML_I00);
+    const def00 = await prelude.flatResolveVimeos('https://vimeos.net/embed-x.html');
+    check('vimeos default: referer LaMovie intacto', calls[0].headers.Referer, 'https://lamovie.org/');
+    check('vimeos default: Accept-Language intacto', calls[0].headers['Accept-Language'], 'es-MX,es;q=0.9');
+    check('vimeos default: master i=0.0 al primer fetch', [def00 && def00.url, calls.length], [MASTER + '&i=0.0&sp=0', 1]);
+
+    stub(HTML_I03);
+    const def03 = await prelude.flatResolveVimeos('https://vimeos.net/embed-x.html');
+    check('vimeos default: i=0.3 reintenta y se agota (3 fetchs, null)', [def03, calls.length], [null, 3]);
+
+    stub(HTML_I03);
+    const hs = await prelude.flatResolveVimeos('https://vimeos.net/embed-x.html', { referer: 'https://vimeos.net/', accept: 'text/html', firstMatch: true });
+    check('vimeos hackstore: referer propio', calls[0].headers.Referer, 'https://vimeos.net/');
+    check('vimeos hackstore: Accept text/html', calls[0].headers.Accept, 'text/html');
+    check('vimeos hackstore: primer master i=0.3 al primer fetch', [hs && hs.url, calls.length], [MASTER + '&i=0.3&sp=0', 1]);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+}
+
 if (selftestFailures > 0) process.exit(1);
 
 console.log('--- casos en vivo (dist) ---');
