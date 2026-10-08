@@ -15,7 +15,7 @@ var DIAG_PARITY_PLAIN = 'magis-diag-parity-v1';
 var DIAG_PARITY_WIRE = '30364e4771506c76706635776949527546357554737871432b4c586a37646d43';
 
 function diagPlainBody() {
-  var body = { loginType: '2', appLanguage: 'en', apkVersion: MAGIS_APK_VERSION, sysVersion: '2025-08-07 05:40:11_36_16_', appId: MAGIS_APP_ID, hardwareInfo: 'ranchu', model: 'sdk_gphone64_arm64', product: 'sdk_gphone64_arm64', cpu: 'arm64-v8a', B29: '', reserve1: '', deviceToken: '', sn: '', drmId: '', sdkVer: 36 };
+  var body = { loginType: '2', appLanguage: 'en', apkVersion: MAGIS_APK_VERSION, sysVersion: MAGIS_SPKG_VER, appId: MAGIS_APP_ID, hardwareInfo: 'ranchu', model: 'sdk_gphone64_arm64', product: 'sdk_gphone64_arm64', cpu: 'arm64-v8a', B29: '', reserve1: '', deviceToken: '', sn: '', drmId: '', sdkVer: 36 };
   var keys = Object.keys(DIAG_BEAN);
   for (var i = 0; i < keys.length; i++) body[keys[i]] = DIAG_BEAN[keys[i]];
   return JSON.stringify(body);
@@ -29,12 +29,12 @@ function diagVerdict(json) {
 }
 
 function tryFetchA(url, wire) {
-  return fetch(url, { method: 'POST', headers: { 'content-type': 'application/json;charset=utf-8', 'apk': MAGIS_APP_ID, 'apkVer': '43404', 'spkgVer': '2025-08-07 05:40:11_36_16_', 'User-Agent': 'okhttp/3.12.12' }, body: wire })
+  return fetch(url, { method: 'POST', headers: { 'content-type': 'application/json;charset=utf-8', 'apk': MAGIS_APP_ID, 'apkVer': MAGIS_APK_VER_HEADER, 'spkgVer': MAGIS_SPKG_VER, 'User-Agent': 'okhttp/3.12.12' }, body: wire })
     .then(function (r) { return r.json(); }).catch(function (e) { return { error: e.message }; });
 }
 
 function tryFetchLower(url, wire) {
-  return fetch(url, { method: 'POST', headers: { 'content-type': 'application/json;charset=utf-8', 'apk': MAGIS_APP_ID, 'apkver': '43404', 'spkgver': '2025-08-07 05:40:11_36_16_', 'user-agent': 'okhttp/3.12.12' }, body: wire })
+  return fetch(url, { method: 'POST', headers: { 'content-type': 'application/json;charset=utf-8', 'apk': MAGIS_APP_ID, 'apkver': MAGIS_APK_VER_HEADER, 'spkgver': MAGIS_SPKG_VER, 'user-agent': 'okhttp/3.12.12' }, body: wire })
     .then(function (r) { return r.json(); }).catch(function (e) { return { error: e.message }; });
 }
 
@@ -42,8 +42,8 @@ function tryFetchHeadersObject(url, wire) {
   var headers = new Headers();
   headers.append('content-type', 'application/json;charset=utf-8');
   headers.append('apk', MAGIS_APP_ID);
-  headers.append('apkVer', '43404');
-  headers.append('spkgVer', '2025-08-07 05:40:11_36_16_');
+  headers.append('apkVer', MAGIS_APK_VER_HEADER);
+  headers.append('spkgVer', MAGIS_SPKG_VER);
   headers.append('User-Agent', 'okhttp/3.12.12');
   return fetch(url, { method: 'POST', headers: headers, body: wire })
     .then(function (r) { return r.json(); }).catch(function (e) { return { error: e.message }; });
@@ -57,8 +57,8 @@ function tryXhr(url, wire, withHeaders) {
       if (withHeaders) {
         xhr.setRequestHeader('content-type', 'application/json;charset=utf-8');
         xhr.setRequestHeader('apk', MAGIS_APP_ID);
-        xhr.setRequestHeader('apkVer', '43404');
-        xhr.setRequestHeader('spkgVer', '2025-08-07 05:40:11_36_16_');
+        xhr.setRequestHeader('apkVer', MAGIS_APK_VER_HEADER);
+        xhr.setRequestHeader('spkgVer', MAGIS_SPKG_VER);
         xhr.setRequestHeader('User-Agent', 'okhttp/3.12.12');
       }
       xhr.onload = function () { try { resolve(JSON.parse(xhr.responseText)); } catch (e) { resolve({ error: 'respuesta no-JSON (' + xhr.status + ')' }); } };

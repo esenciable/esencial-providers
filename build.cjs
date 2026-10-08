@@ -18,29 +18,49 @@ const scrapers = Array.isArray(manifest) ? manifest : manifest.scrapers;
   const magisCore = fs.readFileSync(path.join(__dirname, 'lib', 'flat-magis-core.js'), 'utf8');
 
   /** Operator constants for the Magis portal (public APK values + the portal 3DES key).
-   * Read from the environment first, else from the sibling addon .env. Never printed. */
+   * SINGLE SOURCE OF TRUTH: `magis-config.json` at the repo root — the SAME file NuvioES fetches
+   * at runtime, so a rotation of hosts, versions or key is one push and needs no app release.
+   * Falls back to the environment, then to the sibling addon .env. Never printed. */
   function magisConstantsBlock() {
-    const fromEnv = {};
-    for (const key of ['MAGIS_HOSTS', 'MAGIS_APP_ID', 'MAGIS_APK_VERSION', 'MAGIS_3DES_KEY']) {
-      if (process.env[key]) fromEnv[key] = process.env[key];
-    }
-    const envPath = path.join(__dirname, '..', 'kino-light-addon', '.env');
-    if (Object.keys(fromEnv).length < 4 && fs.existsSync(envPath)) {
-      for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#') || !trimmed.includes('=')) continue;
-        const index = trimmed.indexOf('=');
-        const key = trimmed.slice(0, index).trim();
-        const value = trimmed.slice(index + 1).trim();
-        if (['MAGIS_HOSTS', 'MAGIS_APP_ID', 'MAGIS_APK_VERSION', 'MAGIS_3DES_KEY'].includes(key) && !fromEnv[key]) fromEnv[key] = value;
+    const KEYS = [
+      'MAGIS_HOSTS', 'MAGIS_APP_ID', 'MAGIS_APK_VERSION', 'MAGIS_3DES_KEY',
+      'MAGIS_APK_VER_HEADER', 'MAGIS_SPKG_VER',
+    ];
+    const values = {};
+    const configPath = path.join(__dirname, 'magis-config.json');
+    if (fs.existsSync(configPath)) {
+      const cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (Array.isArray(cfg.hosts) && cfg.hosts.length > 0) values.MAGIS_HOSTS = cfg.hosts.join(',');
+      for (const [from, to] of [['appId', 'MAGIS_APP_ID'], ['apkVersion', 'MAGIS_APK_VERSION'],
+        ['apkVerHeader', 'MAGIS_APK_VER_HEADER'], ['spkgVer', 'MAGIS_SPKG_VER'],
+        ['threeDesKeyHex', 'MAGIS_3DES_KEY']]) {
+        if (cfg[from]) values[to] = String(cfg[from]);
       }
     }
-    const hosts = (fromEnv.MAGIS_HOSTS || '').split(',').map(h => h.trim()).filter(Boolean);
+    for (const key of KEYS) {
+      if (!values[key] && process.env[key]) values[key] = process.env[key];
+    }
+    if (KEYS.some(key => !values[key])) {
+      const envPath = path.join(__dirname, '..', 'kino-light-addon', '.env');
+      if (fs.existsSync(envPath)) {
+        for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('#') || !trimmed.includes('=')) continue;
+          const index = trimmed.indexOf('=');
+          const key = trimmed.slice(0, index).trim();
+          const value = trimmed.slice(index + 1).trim();
+          if (KEYS.includes(key) && !values[key]) values[key] = value;
+        }
+      }
+    }
+    const hosts = (values.MAGIS_HOSTS || '').split(',').map(h => h.trim()).filter(Boolean);
     return [
       `var MAGIS_HOSTS = ${JSON.stringify(hosts)};`,
-      `var MAGIS_APP_ID = ${JSON.stringify(fromEnv.MAGIS_APP_ID || '')};`,
-      `var MAGIS_APK_VERSION = ${JSON.stringify(fromEnv.MAGIS_APK_VERSION || '')};`,
-      `var MAGIS_3DES_KEY = ${JSON.stringify(fromEnv.MAGIS_3DES_KEY || '')};`,
+      `var MAGIS_APP_ID = ${JSON.stringify(values.MAGIS_APP_ID || '')};`,
+      `var MAGIS_APK_VERSION = ${JSON.stringify(values.MAGIS_APK_VERSION || '')};`,
+      `var MAGIS_APK_VER_HEADER = ${JSON.stringify(values.MAGIS_APK_VER_HEADER || '')};`,
+      `var MAGIS_SPKG_VER = ${JSON.stringify(values.MAGIS_SPKG_VER || '')};`,
+      `var MAGIS_3DES_KEY = ${JSON.stringify(values.MAGIS_3DES_KEY || '')};`,
       '',
     ].join('\n');
   }
