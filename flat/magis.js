@@ -6,13 +6,13 @@ function getStreams(tmdbId, mediaType, season, episode) {
   var id = String(tmdbId === null || tmdbId === undefined ? '' : tmdbId);
   console.log('[magis] resolving ' + id);
   var state = null;
-
-  return magisActivate()
-    .then(function (activated) {
-      state = activated;
-      return flatTmdbInfo(id, isSeries ? 'series' : 'movie');
-    })
-    .then(function (info) {
+  // S4: el mint de sesión y el lookup de TMDB no se dependen -> en paralelo (ahorra ~180 ms local,
+  // ~350 ms en el Mi Box). Promise.all conserva el comportamiento de error: si cualquiera falla,
+  // el catch de abajo devuelve [] igual que antes.
+  return Promise.all([magisActivate(), flatTmdbInfo(id, isSeries ? 'series' : 'movie')])
+    .then(function (results) {
+      state = results[0];
+      var info = results[1];
       if (info === null) return null;
       var titles = [info.title, info.originalTitle].filter(function (value, index, list) {
         return value && list.indexOf(value) === index;
@@ -20,7 +20,7 @@ function getStreams(tmdbId, mediaType, season, episode) {
       function tryTitle(index) {
         if (index >= titles.length) return Promise.resolve(null);
         return magisCall('v3/searchByName', {
-          value: magisPortalQuery(titles[index]), type: '0', columnId: '', filter: '', pageNum: 1, pageSize: 20,
+          value: magisPortalQuery(titles[index]), type: '0', columnId: '', filter: '', pageNum: 1, pageSize: 10,
         }, state).then(function (search) {
           var selected = magisSelectCandidate(magisSearchItems(search), titles[index], isSeries);
           if (selected) return selected;

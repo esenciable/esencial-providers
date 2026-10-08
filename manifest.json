@@ -1,14 +1,14 @@
 {
   "id": "com.esencialplay.providers",
   "name": "Esencial Providers",
-  "version": "1.1.0",
-  "description": "Catálogo Latino scraper-based: Magis, HackStore, LaMovie, SoloLatino, AresHD, Cinemitas, MegaDede, EntrePeliculas y CineCalidad. Resolución en el dispositivo.",
+  "version": "1.2.0",
+  "description": "Catálogo Latino scraper-based: Magis VOD, HackStore, Cinemitas, SeriesMetro y Embed69. Resolución en el dispositivo.",
   "scrapers": [
     {
       "id": "magis",
       "name": "Magis VOD",
       "description": "Películas y series de Magis con sesión anónima de dispositivo. URLs directas del CDN.",
-      "version": "4.0.0",
+      "version": "4.0.1",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
@@ -38,7 +38,7 @@
         "tv"
       ],
       "filename": "dist/esencial-test-v4.js",
-      "enabled": true,
+      "enabled": false,
       "logo": "",
       "contentLanguage": [
         "en"
@@ -59,7 +59,7 @@
         "tv"
       ],
       "filename": "dist/esencial-diag-v4.js",
-      "enabled": true,
+      "enabled": false,
       "logo": "",
       "contentLanguage": [
         "en"
@@ -80,7 +80,7 @@
         "tv"
       ],
       "filename": "dist/diag-magis-v4.js",
-      "enabled": true,
+      "enabled": false,
       "logo": "",
       "contentLanguage": [
         "es"
@@ -93,8 +93,8 @@
     {
       "id": "hackstore-plain",
       "name": "HackStore",
-      "description": "HackStore en archivo plano (sin bundler, sin async/await) - test A/B del runtime.",
-      "version": "4.0.0",
+      "description": "Películas y series de HackStore (API nativa, archivo plano). URLs directas con headers.",
+      "version": "4.0.1",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
@@ -165,7 +165,7 @@
         "tv"
       ],
       "filename": "dist/lamovie-v4.js",
-      "enabled": true,
+      "enabled": false,
       "contentLanguage": [
         "es"
       ],
@@ -187,7 +187,7 @@
         "tv"
       ],
       "filename": "dist/sololatino-v4.js",
-      "enabled": true,
+      "enabled": false,
       "contentLanguage": [
         "es"
       ],
@@ -210,7 +210,7 @@
         "tv"
       ],
       "filename": "dist/areshd-v4.js",
-      "enabled": true,
+      "enabled": false,
       "contentLanguage": [
         "es"
       ],
@@ -225,7 +225,7 @@
       "id": "cinemitas",
       "name": "Cinemitas",
       "description": "Películas y series de Cinemitas (DooPlay + admin-ajax).",
-      "version": "4.0.0",
+      "version": "4.0.1",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
@@ -254,7 +254,7 @@
         "tv"
       ],
       "filename": "dist/megadede-v4.js",
-      "enabled": true,
+      "enabled": false,
       "contentLanguage": [
         "es"
       ],
@@ -276,7 +276,7 @@
         "tv"
       ],
       "filename": "dist/entre-v4.js",
-      "enabled": true,
+      "enabled": false,
       "contentLanguage": [
         "es"
       ],
@@ -297,7 +297,7 @@
         "movie"
       ],
       "filename": "dist/cinecalidad-v4.js",
-      "enabled": true,
+      "enabled": false,
       "contentLanguage": [
         "es"
       ],
@@ -312,13 +312,36 @@
       "id": "seriesmetro",
       "name": "SeriesMetro",
       "description": "Películas y series de SeriesMetro (trembed + admin-ajax). Servidores Latinos.",
-      "version": "4.1.0",
+      "version": "4.1.1",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
       "filename": "dist/seriesmetro-v4.js",
+      "enabled": true,
+      "contentLanguage": [
+        "es"
+      ],
+      "formats": [
+        "m3u8",
+        "mp4"
+      ],
+      "supportsExternalPlayer": true,
+      "logo": "",
+      "limited": false
+    },
+    {
+      "id": "embed69",
+      "name": "Embed69",
+      "description": "Películas y series de Embed69 (por IMDB id, PoW + AES). Servidores Latino.",
+      "version": "4.0.0",
+      "author": "esencialplay",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "dist/embed69-v4.js",
       "enabled": true,
       "contentLanguage": [
         "es"
@@ -342,7 +365,7 @@
         "tv"
       ],
       "filename": "dist/seriesflix-v4.js",
-      "enabled": true,
+      "enabled": false,
       "contentLanguage": [
         "es"
       ],
@@ -365,7 +388,7 @@
         "tv"
       ],
       "filename": "dist/cu3v4n4-v4.js",
-      "enabled": true,
+      "enabled": false,
       "contentLanguage": [
         "es"
       ],

@@ -158,8 +158,8 @@ function getStreams(tmdbId, mediaType, season, episode) {
           }).catch(function () { return null; });
         });
         return Promise.all(promises).then(function (list) {
-          // Ranking estilo Kino Latino: idioma, calidad (4K al final), servidor fiable, cap 10.
-          return flatRankStreams(list.filter(function (item) { return item !== null; }));
+          // Ranking estilo Kino Latino + reglas del dueño (idioma, servidores, limit), en el prelude.
+          return flatRankStreams(list.filter(function (item) { return item !== null; }), flatOwnerRankOptions());
         });
       });
     });

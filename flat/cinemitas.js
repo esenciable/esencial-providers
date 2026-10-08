@@ -98,7 +98,8 @@ function cineResolveOptions(html, pageUrl) {
   var options = cineOptions(html);
   var promises = options.map(function (option) { return cineResolveOption(option, pageUrl); });
   return Promise.all(promises).then(function (list) {
-    return list.filter(function (item) { return item !== null; });
+    // Reglas del dueño (idioma + servidores permitidos + limit), definidas una sola vez en el prelude.
+    return flatRankStreams(list.filter(function (item) { return item !== null; }), flatOwnerRankOptions());
   });
 }
 

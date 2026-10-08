@@ -1,7 +1,48 @@
 // Local logic verification (the real playback test happens in Nuvio on-device).
+// Parte 1: selftest determinista del filtro del dueño (S1) contra lib/flat-prelude.js (sin red).
+// Parte 2: casos en vivo contra los dist de los proveedores que quedan.
 import { createRequire } from 'node:module';
 import { readFileSync, existsSync } from 'node:fs';
 const require = createRequire(import.meta.url);
+
+let selftestFailures = 0;
+function check(name, actual, expected) {
+  const ok = JSON.stringify(actual) === JSON.stringify(expected);
+  if (!ok) { selftestFailures++; console.log(`FAIL ${name}: got ${JSON.stringify(actual)}, want ${JSON.stringify(expected)}`); }
+  else console.log(`ok   ${name}`);
+}
+console.log('--- selftest filtro del dueño (S1, offline) ---');
+const prelude = require('./lib/flat-prelude.js');
+const ownerOpts = prelude.flatOwnerRankOptions();
+const OWNER_STREAMS = [
+  { title: 'Latino - Uqload 1080p', url: 'https://strm5.uqload.vc/abc.m3u8', quality: '1080p' },
+  { title: 'Castellano - Uqload 720p', url: 'https://strm2.uqload.vc/def.m3u8', quality: '720p' },
+  { title: 'Subtitulado - Uqload 720p', url: 'https://strm3.uqload.vc/ghi.m3u8', quality: '720p' },
+  { title: 'Latino - Vimeos 720p', url: 'https://p4.vimeos.zip/vod.m3u8', quality: '720p' },
+  { title: 'Latino - GoodStream 720p', url: 'https://hls2.goodstream.one/lol.m3u8', quality: '720p' },
+  { title: 'Servidor 1080p', url: 'https://cdn.ejemplo.org/video/master.m3u8', quality: '1080p' },
+  { title: 'Servidor 480p', url: 'https://cdn2.ejemplo.org/video/sd.m3u8', quality: '480p' },
+  { title: 'Latino - VOE 720p', url: 'https://voe.sx/e/xyz', quality: '720p' },
+];
+check('surviving titles', prelude.flatRankStreams(OWNER_STREAMS, ownerOpts).map(s => s.title), [
+  'Latino - Uqload 1080p',
+  'Latino - Vimeos 720p',
+  'Online 1080p',
+]);
+const many = [];
+for (let i = 0; i < 9; i++) many.push({ title: 'Latino - Uqload 720p', url: 'https://uqload.io/v' + i + '.m3u8', quality: '720p' });
+check('limit 4', prelude.flatRankStreams(many, ownerOpts).length, 4);
+check('unlabeled kept', prelude.flatRankStreams([
+  { title: 'Servidor HD', url: 'https://cdn.ejemplo.org/video/master.m3u8', quality: 'HD' },
+], ownerOpts).length, 1);
+check('latino before unlabeled', prelude.flatRankStreams([
+  { title: 'Servidor 1080p', url: 'https://cdn.ejemplo.org/video/master.m3u8', quality: '1080p' },
+  { title: 'Latino - Uqload 720p', url: 'https://strm5.uqload.vc/abc.m3u8', quality: '720p' },
+], ownerOpts).map(s => s.title), ['Latino - Uqload 720p', 'Online 1080p']);
+check('default limit unchanged', prelude.flatRankStreams(many).length, 9);
+if (selftestFailures > 0) process.exit(1);
+
+console.log('--- casos en vivo (dist) ---');
 
 // Resolve each scraper id to its cache-busted dist filename via the manifest.
 let scrapers = [];
@@ -16,23 +57,13 @@ const distFile = Object.fromEntries(scrapers.map(s => [s.id, `./dist/${s.filenam
 const CASES = [
   ['magis', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
   ['magis', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
-  ['hackstore', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
-  ['lamovie', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
-  ['sololatino', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
-  ['areshd', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
+  ['hackstore-plain', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
+  ['hackstore-plain', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
+  ['embed69', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
+  ['embed69', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
   ['cinemitas', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
-  ['megadede', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
-  ['entre', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
-  ['cinecalidad', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
   ['seriesmetro', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
-  ['seriesflix', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
-  ['cu3v4n4', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
-  ['hackstore', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
-  ['lamovie', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
-  ['areshd', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
   ['seriesmetro', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
-  ['seriesflix', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
-  ['cu3v4n4', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
 ];
 
 for (const [name, tmdbId, type, season, episode, label] of CASES) {
