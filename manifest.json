@@ -15,7 +15,7 @@
         "tv"
       ],
       "filename": "dist/magis-v4.js",
-      "enabled": true,
+      "enabled": false,
       "contentLanguage": [
         "es"
       ],
@@ -26,69 +26,6 @@
       "supportsExternalPlayer": true,
       "logo": "",
       "limited": false
-    },
-    {
-      "id": "esencial-test",
-      "name": "Esencial Test",
-      "description": "Diagnóstico: video de muestra sin red. Si aparece, la carga de providers funciona.",
-      "version": "4.0.0",
-      "author": "esencialplay",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "dist/esencial-test-v4.js",
-      "enabled": false,
-      "logo": "",
-      "contentLanguage": [
-        "en"
-      ],
-      "formats": [
-        "m3u8"
-      ],
-      "supportsExternalPlayer": true
-    },
-    {
-      "id": "esencial-diag",
-      "name": "Esencial Diag",
-      "description": "Diagnóstico de runtime: muestra en el título qué APIs y redes funcionan en este dispositivo.",
-      "version": "4.0.0",
-      "author": "esencialplay",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "dist/esencial-diag-v4.js",
-      "enabled": false,
-      "logo": "",
-      "contentLanguage": [
-        "en"
-      ],
-      "formats": [
-        "m3u8"
-      ],
-      "supportsExternalPlayer": true
-    },
-    {
-      "id": "diag-magis",
-      "name": "Diag Magis",
-      "description": "Diagnóstico del portal Magis en el dispositivo (tiempos y errores en el título).",
-      "version": "4.0.0",
-      "author": "esencialplay",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "dist/diag-magis-v4.js",
-      "enabled": false,
-      "logo": "",
-      "contentLanguage": [
-        "es"
-      ],
-      "formats": [
-        "m3u8"
-      ],
-      "supportsExternalPlayer": true
     },
     {
       "id": "hackstore-plain",
@@ -112,116 +49,6 @@
       "supportsExternalPlayer": true
     },
     {
-      "id": "hackstore-es2020",
-      "name": "Hackstore ES2020",
-      "description": "HackStore empaquetado con async/await nativo (sin generadores) - test A/B del runtime.",
-      "version": "4.0.0",
-      "author": "esencialplay",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "dist/hackstore-es2020-v4.js",
-      "enabled": false,
-      "logo": "",
-      "contentLanguage": [
-        "es"
-      ],
-      "formats": [
-        "m3u8"
-      ],
-      "supportsExternalPlayer": true
-    },
-    {
-      "id": "hackstore",
-      "name": "HackStore",
-      "description": "Películas y series de HackStore (API nativa). URLs directas del CDN con headers.",
-      "version": "4.0.0",
-      "author": "esencialplay",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "dist/hackstore-v4.js",
-      "enabled": false,
-      "contentLanguage": [
-        "es"
-      ],
-      "formats": [
-        "m3u8"
-      ],
-      "supportsExternalPlayer": true,
-      "logo": "",
-      "limited": false
-    },
-    {
-      "id": "lamovie",
-      "name": "LaMovie",
-      "description": "Películas y series de LaMovie (lamovie.org, API nativa). Servidores Latino.",
-      "version": "4.0.0",
-      "author": "esencialplay",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "dist/lamovie-v4.js",
-      "enabled": false,
-      "contentLanguage": [
-        "es"
-      ],
-      "formats": [
-        "m3u8"
-      ],
-      "supportsExternalPlayer": true,
-      "logo": "",
-      "limited": false
-    },
-    {
-      "id": "sololatino",
-      "name": "SoloLatino",
-      "description": "Catálogo de sololatino.net resuelto vía embed69 (PoW+AES). Solo media directa.",
-      "version": "4.0.0",
-      "author": "esencialplay",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "dist/sololatino-v4.js",
-      "enabled": false,
-      "contentLanguage": [
-        "es"
-      ],
-      "formats": [
-        "m3u8",
-        "mp4"
-      ],
-      "supportsExternalPlayer": true,
-      "logo": "",
-      "limited": false
-    },
-    {
-      "id": "areshd",
-      "name": "AresHD",
-      "description": "Películas y series de AresHD con pestañas por idioma.",
-      "version": "4.0.0",
-      "author": "esencialplay",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "dist/areshd-v4.js",
-      "enabled": false,
-      "contentLanguage": [
-        "es"
-      ],
-      "formats": [
-        "m3u8"
-      ],
-      "supportsExternalPlayer": true,
-      "logo": "",
-      "limited": false
-    },
-    {
       "id": "cinemitas",
       "name": "Cinemitas",
       "description": "Películas y series de Cinemitas (DooPlay + admin-ajax).",
@@ -233,71 +60,6 @@
       ],
       "filename": "dist/cinemitas-v4.js",
       "enabled": true,
-      "contentLanguage": [
-        "es"
-      ],
-      "formats": [
-        "m3u8"
-      ],
-      "supportsExternalPlayer": true,
-      "logo": "",
-      "limited": false
-    },
-    {
-      "id": "megadede",
-      "name": "MegaDede",
-      "description": "Películas y series de MegaDede (megadede.mobi, /vidurl/ con PoW+AES).",
-      "version": "4.0.0",
-      "author": "esencialplay",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "dist/megadede-v4.js",
-      "enabled": false,
-      "contentLanguage": [
-        "es"
-      ],
-      "formats": [
-        "m3u8"
-      ],
-      "supportsExternalPlayer": true,
-      "logo": "",
-      "limited": false
-    },
-    {
-      "id": "entre",
-      "name": "EntrePeliculas",
-      "description": "Películas y series de EntrePeliculasYSeries (/vidurl/ con PoW+AES).",
-      "version": "4.0.0",
-      "author": "esencialplay",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "dist/entre-v4.js",
-      "enabled": false,
-      "contentLanguage": [
-        "es"
-      ],
-      "formats": [
-        "m3u8"
-      ],
-      "supportsExternalPlayer": true,
-      "logo": "",
-      "limited": false
-    },
-    {
-      "id": "cinecalidad",
-      "name": "CineCalidad",
-      "description": "Películas de CineCalidad (DooPlay, data-option). Solo películas.",
-      "version": "4.0.0",
-      "author": "esencialplay",
-      "supportedTypes": [
-        "movie"
-      ],
-      "filename": "dist/cinecalidad-v4.js",
-      "enabled": false,
       "contentLanguage": [
         "es"
       ],
@@ -343,52 +105,6 @@
       ],
       "filename": "dist/embed69-v4.js",
       "enabled": true,
-      "contentLanguage": [
-        "es"
-      ],
-      "formats": [
-        "m3u8",
-        "mp4"
-      ],
-      "supportsExternalPlayer": true,
-      "logo": "",
-      "limited": false
-    },
-    {
-      "id": "seriesflix",
-      "name": "SeriesFlix",
-      "description": "Series de SeriesFlix (data-url base64 + unwrap). Servidores Latinos.",
-      "version": "4.1.0",
-      "author": "esencialplay",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "dist/seriesflix-v4.js",
-      "enabled": false,
-      "contentLanguage": [
-        "es"
-      ],
-      "formats": [
-        "m3u8",
-        "mp4"
-      ],
-      "supportsExternalPlayer": true,
-      "logo": "",
-      "limited": false
-    },
-    {
-      "id": "cu3v4n4",
-      "name": "Cuevana3",
-      "description": "Películas y series de Cuevana3 (token XOR + Hyper/Filemoon/Nebula/Doodstream).",
-      "version": "4.1.0",
-      "author": "esencialplay",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
-      "filename": "dist/cu3v4n4-v4.js",
-      "enabled": false,
       "contentLanguage": [
         "es"
       ],
