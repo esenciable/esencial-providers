@@ -130,3 +130,17 @@ la práctica queda 1-2 por proveedor: alcanza para sobrevivir 1-2 enlaces muerto
 - `node test.mjs` verde; `dist/*` todos por debajo del techo de ~50KB del runtime de Nuvio.
 - Magis NO pasa por el allowlist de servidores a propósito: su stream es un CDN directo del portal y el
   filtro lo mataría.
+
+## Nota (2026-10-08): por qué `magis` queda ENCENDIDO
+
+Se apagó un rato para evitar la fila duplicada en el fork (la fuente nativa resuelve la MISMA URL), y
+se volvió a encender al detectar el problema real: **el scraper es la capa portátil**. Sin él, cualquier
+Nuvio que no sea el fork —incluido stock— **se queda sin Magis**. La nativa sólo existe en NuvioES.
+
+La duplicación en el fork **no se resuelve apagando el proveedor**, se resuelve en la app: se descarta
+un stream cuya URL ya vino de un grupo anterior, y como la fuente nativa va primero en `pluginOrder`,
+sobrevive la nativa (rápida) y la del scraper desaparece de la vista. El respaldo queda **invisible
+pero real**: si la vía nativa falla, la del scraper es la única y Magis igual funciona.
+
+Regla general que queda de esto: **un proveedor del repo no se apaga para arreglar un problema de la
+app.** El manifest no es dónde se tapan los síntomas.
