@@ -17,12 +17,15 @@ function getStreams(tmdbId, mediaType, season, episode) {
       var titles = [info.title, info.originalTitle].filter(function (value, index, list) {
         return value && list.indexOf(value) === index;
       });
+      // El año de TMDB (YYYY o null) alimenta la verificación de releaseTime en la selección
+      // de candidatos: un candidato de otro año no gana (regla documentada en flat-magis-core).
+      var year = info.year;
       function tryTitle(index) {
         if (index >= titles.length) return Promise.resolve(null);
         return magisCall('v3/searchByName', {
           value: magisPortalQuery(titles[index]), type: '0', columnId: '', filter: '', pageNum: 1, pageSize: 10,
         }, state).then(function (search) {
-          var selected = magisSelectCandidate(magisSearchItems(search), titles[index], isSeries);
+          var selected = magisSelectCandidate(magisSearchItems(search), titles[index], isSeries, year);
           if (selected) return selected;
           return tryTitle(index + 1);
         }).catch(function () { return tryTitle(index + 1); });

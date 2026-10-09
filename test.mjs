@@ -80,6 +80,48 @@ console.log('--- selftest flatResolveVimeos configurable (hackstore-plain, offli
   }
 }
 
+console.log('--- selftest magisSelectCandidate (regla de aceptación de candidatos, offline) ---');
+// Carga el núcleo real (lib/flat-magis-core.js) vía el puente de pruebas: el test no puede
+// desincronizarse de lo que corre en el dist (mismo archivo que concatena build.cjs).
+// flatStr vive en el prelude (no exportado); el núcleo la resuelve como global en Node.
+const magisCore = require('./lib/flat-magis-core.js');
+globalThis.flatStr = (v) => (typeof v === 'string' ? v.trim() : typeof v === 'number' ? String(v) : '');
+const select = magisCore.magisSelectCandidate;
+{
+  // Datos reales observados en el portal (búsqueda "Dunas", incidente Dune 1984 -> Tuareg).
+  const TUAREGS = { type: 'movie', contentId: '947BBBB6BDC24DA6B5D6405C9399BC78', name: 'Tuaregs, los guerreros de las dunas', programType: 'movie', releaseTime: '2013-08-03', score: 5 };
+  const DUNA_2021 = { type: 'movie', contentId: 'DUNA2021', name: 'Duna', programType: 'movie', releaseTime: '2021-10-22', score: 8.2 };
+  const movie = (name, year, score, id) => ({ type: 'movie', contentId: id || name, name, programType: 'movie', releaseTime: year, score });
+  // 1. El bug reportado: un candidato débil y único NO se acepta a ciegas (year 1984 vs 2013).
+  check('dunas 1984 no acepta Tuareg (year)', select([TUAREGS], 'Dunas', false, '1984'), null);
+  // 2. Con año conocido, gana el candidato del año correcto aunque el portal puntúe menos.
+  check('duna 2021 gana por año', select([TUAREGS, DUNA_2021], 'Duna', false, '2021')?.contentId, 'DUNA2021');
+  // 3. Cobertura mínima: compartir una palabra de un título de dos no es match
+  //    (magisTokens solo cuenta tokens de 3+ chars, así que el par debe tener dos tokens reales).
+  check('cobertura mínima rechaza match parcial', select([movie('Mad', '2015-05-14', 9)], 'Mad Max', false, null), null);
+  check('cobertura completa acepta', select([movie('El Padrino', '1972-03-15', 9)], 'El Padrino', false, '1972')?.contentId, 'El Padrino');
+  // 4. Desempate por el score del portal entre candidatos que pasan.
+  const weakPortal = movie('Duna', '2021-10-22', 5, 'WEAK');
+  const strongPortal = movie('Duna', '2021-10-22', 8.2, 'STRONG');
+  check('desempate por score del portal', select([weakPortal, strongPortal], 'Duna', false, '2021')?.contentId, 'STRONG');
+  // 5. Tolerancia de año ±1 (drift de fecha de estreno).
+  check('tolerancia de año ±1', select([movie('Otra', '2022-01-05', 5, 'OTRA')], 'Otra', false, '2021')?.contentId, 'OTRA');
+  check('año fuera de ±1 rechaza', select([movie('Otra', '2023-01-05', 5, 'OTRA')], 'Otra', false, '2021'), null);
+  // 6. Sin año no se bloquea: candidato sin releaseTime verificable pasa si el nombre cubre.
+  check('sin releaseTime no rechaza por año', select([{ type: 'movie', contentId: 'SINFECHA', name: 'Duna', programType: 'movie', score: 5 }], 'Duna', false, '2021')?.contentId, 'SINFECHA');
+  // 7. Filtro programType y contentId siguen mandando (comportamiento que ya estaba bien).
+  const bb = { type: 'teleplay', contentId: 'BB', name: 'Breaking Bad', programType: 'series', releaseTime: '2008-01-20', score: 9 };
+  const camino = { type: 'movie', contentId: 'CAMINO', name: 'El Camino: A Breaking Bad Movie', programType: 'movie', releaseTime: '2019-10-11', score: 9.5 };
+  check('serie: filtra programa y elige la serie', select([camino, bb], 'Breaking Bad', true, '2008')?.contentId, 'BB');
+  check('sin contentId se descarta', select([{ type: 'movie', contentId: '', name: 'Duna', programType: 'movie', releaseTime: '2021-10-22', score: 9 }], 'Duna', false, '2021'), null);
+  // 8. Ranking por año: entre candidatos que pasan, el de año EXACTO gana al de score más alto
+  //    (el portal lista cada temporada como entrada propia: Breaking Bad T1 2008 vs T2 2009).
+  const t1 = { type: 'teleplay', contentId: 'BB_T1', name: 'Breaking Bad T1', programType: 'teleplay', releaseTime: '2008-01-20', score: 8.8 };
+  const t2 = { type: 'teleplay', contentId: 'BB_T2', name: 'Breaking Bad T2', programType: 'teleplay', releaseTime: '2009-03-08', score: 9.5 };
+  check('año exacto gana al score más alto (temporadas)', select([t2, t1], 'Breaking Bad', true, '2008')?.contentId, 'BB_T1');
+  check('sin año verificable queda al final del ranking', select([t2, t1, { type: 'teleplay', contentId: 'BB_T0', name: 'Breaking Bad T0', programType: 'teleplay', score: 9.9 }], 'Breaking Bad', true, '2008')?.contentId, 'BB_T1');
+}
+
 if (selftestFailures > 0) process.exit(1);
 
 console.log('--- casos en vivo (dist) ---');

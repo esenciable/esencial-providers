@@ -144,3 +144,49 @@ pero real**: si la vía nativa falla, la del scraper es la única y Magis igual 
 
 Regla general que queda de esto: **un proveedor del repo no se apaga para arreglar un problema de la
 app.** El manifest no es dónde se tapan los síntomas.
+
+## Fix 2026-10-08: aceptación de candidatos de Magis (el bug de la película equivocada)
+
+**Síntoma reproducido**: Dune 1984 (tt0087182) → TMDB da el título español "Dunas" → el portal
+.devuelve UN candidato ("Tuaregs, los guerreros de las dunas", 2013, score 5) → se aceptaba a ciegas
+→ se servía OTRA película (`/vod/947BBBB6BDC24DA6B5D6405C9399BC78_media.ts`) y además se mataba la
+cadena de fallback de `flat/magis.js` (`tryTitle(index + 1)` solo corre si el título anterior no
+devolvió nada, así que nunca se buscaba "Dune").
+
+**Regla nueva** (vive en `lib/flat-magis-core.js`, `magisSelectCandidate`, documentada junto al
+incidente; el caller `flat/magis.js` ahora le pasa el año de TMDB):
+1. **Cobertura**: proporción de tokens del título pedido presentes en el nombre del candidato
+   (antes: conteo — compartir una palabra bastaba).
+2. **Cobertura mínima 0.6**: un candidato débil se RECHAZA (null) y el caller cae al título
+   siguiente. Devolver nada es mejor que otra película.
+3. **Año**: si el año pedido es conocido y el candidato trae `releaseTime` (ISO completo), el año
+   debe coincidir con tolerancia ±1. Un candidato de otro año no gana NI SIQUIERA siendo el único.
+4. **Ranking** entre candidatos que pasan: cobertura → año EXACTO → score del portal como desempate
+   final. El año exacto va antes del score porque el portal lista cada temporada como entrada
+   propia (Breaking Bad T1 2008 vs T2 2009) y el score solo decía 9.5 vs 8.8 — sin esto S1E1 caía
+   en la entrada de la T2.
+5. Se conserva: filtro `programType` (serie vs película) y exigencia de `contentId`.
+
+Nota honesta: con un título de un solo token la cobertura es 1.0 por construcción ("Dunas" cubre
+"…guerreros de las dunas"), así que el caso Dune lo resuelve la regla de AÑO; la cobertura mata los
+solapamientos parciales de títulos de varias palabras.
+
+**Verificación** (dist con dump temporal de candidatos, borrado después; BEFORE = dist de git HEAD):
+
+| título | BEFORE | AFTER |
+|---|---|---|
+| Dune 1984 tt0087182 | **Tuareg 2013** `947BBBB6…media.ts` (película equivocada) | **Dune** (releaseTime 1985-03-04, estreno internacional de la de 1984) `EBFEC721…media.ts` — rechaza al Tuareg por año y cae al fallback "Dune" |
+| Dune 2021 tt1160419 | `2753F184…media.ts` | igual (gana "Duna" 2021-10-22 score 8.2 por desempate de portal sobre la otra "Duna" 2021-05-25 score 7.1) |
+| Coco tt2380307 | `8D5CCDD3…media.ts` | igual ("Coco" 2017-11-22; "El Gran Coco Legrand" 2025 cae por año) |
+| Breaking Bad S1E1 | entrada T5 (score-count empatado, orden del portal) → episodio de la temporada equivocada `3DF407C5…` | **T1** (2008-01-20) `0BC32337…media.ts` |
+| The Office S1E1 (ambiguo) | "La Oficina T1" de 2026 (OTRA serie) `1D724049…` | **The Office T1** (2005-03-24, la original) `2BC1F4A4…media.ts` |
+
+Selftest offline nuevo en `test.mjs` (carga el núcleo real vía puente de pruebas, sin red): 12 checks
+verdes — incluidos los de regreso: año exacto gana al score, sin releaseTime queda al final,
+programType y contentId siguen mandando. `node test.mjs` completo verde (exit 0); dists ≤ 41.5KB
+(techo ~50KB).
+
+**Pendiente fuera de superficie permitida**: bump de `version` de `magis` en `manifest.json` (el
+nombre del dist lleva cache-busting; sin bump el CDN puede servir el v4 viejo) y rebuild de
+`dist/diag-magis-v4.js` (build.cjs lo salta por estar disabled en el manifest; su dist queda con el
+núcleo viejo, pero diag no usa la selección de candidatos).

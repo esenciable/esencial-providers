@@ -8,13 +8,13 @@
       "id": "magis",
       "name": "Magis VOD",
       "description": "Películas y series de Magis con sesión anónima de dispositivo. URLs directas del CDN.",
-      "version": "4.0.1",
+      "version": "5.0.0",
       "author": "esencialplay",
       "supportedTypes": [
         "movie",
         "tv"
       ],
-      "filename": "dist/magis-v4.js",
+      "filename": "dist/magis-v5.js",
       "enabled": true,
       "contentLanguage": [
         "es"
