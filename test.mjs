@@ -122,6 +122,51 @@ const select = magisCore.magisSelectCandidate;
   check('sin año verificable queda al final del ranking', select([t2, t1, { type: 'teleplay', contentId: 'BB_T0', name: 'Breaking Bad T0', programType: 'teleplay', score: 9.9 }], 'Breaking Bad', true, '2008')?.contentId, 'BB_T1');
 }
 
+console.log('--- selftest lógica de temporadas de Magis (offline) ---');
+// Bug del dueño: Ted Lasso S2E1 reproducía S1E1 — la temporada se ignoraba y todo capítulo
+// resolvía dentro de la que ya se había pedido. La lógica debe espejar al addon de referencia
+// (kino-light-addon/src/magis/provider.ts): sameSeasonSeriesList dice qué temporada ES este
+// detalle y qué contentId tiene la pedida; sin destino y sin poder identificar la actual,
+// NADA (mejor sin stream que el capítulo de otra temporada). Datos con la forma del portal:
+// el detalle de una temporada trae simpleProgramList de ESA temporada; una serie de una sola
+// temporada manda la lista de temporadas VACÍA ("es la 1", no "no sé").
+{
+  const season = (n, id) => ({ seasonNumber: n, contentId: id });
+  const ep = (n, id) => ({ seriesNumber: n, contentId: id });
+  const detailFor = (seasons, episodes) => ({ assetData: { sameSeasonSeriesList: seasons, simpleProgramList: episodes } });
+  const TED_S1 = detailFor([season(1, 'TED_S1'), season(2, 'TED_S2'), season(3, 'TED_S3')], [ep(1, 'S1E1'), ep(2, 'S1E2')]);
+  const TED_S2 = detailFor([season(1, 'TED_S1'), season(2, 'TED_S2'), season(3, 'TED_S3')], [ep(1, 'S2E1'), ep(2, 'S2E2')]);
+  const SINGLE = detailFor([], [ep(1, 'ONE_E1'), ep(2, 'ONE_E2')]);
+  const step = magisCore.magisSeasonStep;
+  const seasonOf = magisCore.magisSeasonOfDetail;
+  const contentIdFor = magisCore.magisContentIdForSeason;
+  // 1. Serie multi-temporada: pedir la 2 desde el detalle de la 1 => refetch al contentId de la 2.
+  check('S2 pedida desde detalle S1: refetch a TED_S2', step(TED_S1, 'TED_S1', 2), { refetch: true, contentId: 'TED_S2' });
+  // 2. Pedir la temporada que ya es el detalle => sin refetch, mismo contentId.
+  check('S1 pedida desde detalle S1: sin refetch', step(TED_S1, 'TED_S1', 1), { refetch: false, contentId: 'TED_S1' });
+  // 3. El detalle de la S2 también se reconoce como temporada 2.
+  check('detalle S2 se identifica como temporada 2', step(TED_S2, 'TED_S2', 2), { refetch: false, contentId: 'TED_S2' });
+  // 4. Temporada inexistente en una serie multi-temporada => SIN resultado.
+  check('temporada 99 inexistente: sin resultado', step(TED_S1, 'TED_S1', 99), null);
+  // 5. Lista vacía + temporada 1 => avanzar normal (serie de una sola temporada).
+  check('una sola temporada, pedir la 1: avanza', step(SINGLE, 'ONE', 1), { refetch: false, contentId: 'ONE' });
+  // 6. Lista vacía + CUALQUIER otra temporada => SIN resultado (nunca otro capítulo de la 1).
+  check('una sola temporada, pedir la 2: sin resultado', step(SINGLE, 'ONE', 2), null);
+  // 7. Sin temporada pedida (0) => avanzar tal cual.
+  check('sin temporada pedida: avanza sin refetch', step(SINGLE, 'ONE', 0), { refetch: false, contentId: 'ONE' });
+  // 8. Lista no vacía sin la entrada propia => "no sé cuál es", pero con destino claro hay refetch.
+  const UNKNOWN = detailFor([season(1, 'TED_S1'), season(2, 'TED_S2')], [ep(1, 'XE1')]);
+  check('contentId propio ausente: refetch al destino conocido', step(UNKNOWN, 'OTRO_ID', 2), { refetch: true, contentId: 'TED_S2' });
+  check('contentId propio ausente sin destino: avanzar (perder capítulos es peor)', step(UNKNOWN, 'OTRO_ID', 3), { refetch: false, contentId: 'OTRO_ID' });
+  // 9. Lecturas sueltas: seasonOfDetail y contentIdForSeason.
+  check('seasonOfDetail: lista vacía es temporada 1', seasonOf(SINGLE, 'ONE'), 1);
+  check('seasonOfDetail: entrada propia manda', seasonOf(TED_S2, 'TED_S2'), 2);
+  check('seasonOfDetail: sin entrada propia es null', seasonOf(UNKNOWN, 'OTRO_ID'), null);
+  check('seasonOfDetail: sin assetData es temporada 1', seasonOf({}, 'X'), 1);
+  check('contentIdForSeason: la pedida existe', contentIdFor(TED_S1, 3), 'TED_S3');
+  check('contentIdForSeason: la pedida no existe', contentIdFor(SINGLE, 2), null);
+}
+
 if (selftestFailures > 0) process.exit(1);
 
 console.log('--- casos en vivo (dist) ---');
@@ -139,6 +184,12 @@ const distFile = Object.fromEntries(scrapers.map(s => [s.id, `./dist/${s.filenam
 const CASES = [
   ['magis', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
   ['magis', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
+  // Bug del dueño: S2E1 reproducía S1E1 — las dos peticiones deben dar mediaIds DISTINTOS.
+  ['magis', 'tt10986410', 'tv', 1, 1, 'Ted Lasso S1E1'],
+  ['magis', 'tt10986410', 'tv', 2, 1, 'Ted Lasso S2E1'],
+  // Serie de UNA sola temporada: S1E1 resuelve y S2E1 debe dar NADA, no otro capítulo de la 1.
+  ['magis', 'tt7366338', 'tv', 1, 1, 'Chernobyl S1E1'],
+  ['magis', 'tt7366338', 'tv', 2, 1, 'Chernobyl S2E1 (no existe)'],
   ['hackstore-plain', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
   ['hackstore-plain', 'tt0903747', 'tv', 1, 1, 'Breaking Bad S1E1'],
   ['embed69', 'tt2380307', 'movie', undefined, undefined, 'Coco'],
@@ -162,7 +213,10 @@ for (const [name, tmdbId, type, season, episode, label] of CASES) {
     ]);
     const seconds = ((Date.now() - startedAt) / 1000).toFixed(1);
     const hosts = [...new Set(streams.map(s => { try { return new URL(s.url).host; } catch { return '(url inválida)'; } }))];
-    console.log(`${name.padEnd(10)} ${label.padEnd(18)} ${String(streams.length).padStart(2)} streams en ${seconds}s | hosts: ${hosts.slice(0, 3).join(', ') || '-'}`);
+    // El mediaId del CDN (/vod/<id>_media) es el contentId de ESTE episodio: si dos peticiones
+    // de la misma serie con distinta temporada producen el mismo mediaId, la temporada se ignoró.
+    const mediaIds = [...new Set(streams.map(s => { const m = String(s.url || '').match(/\/vod\/([^_]+)_media/); return m ? m[1] : '-'; }))];
+    console.log(`${name.padEnd(10)} ${label.padEnd(22)} ${String(streams.length).padStart(2)} streams en ${seconds}s | mediaIds: ${mediaIds.join(', ') || '-'} | hosts: ${hosts.slice(0, 3).join(', ') || '-'}`);
   } catch (error) {
     console.log(`${name.padEnd(10)} ${label.padEnd(18)} ERROR: ${error.message}`);
   }

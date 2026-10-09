@@ -38,13 +38,29 @@ function getStreams(tmdbId, mediaType, season, episode) {
       var seriesContentId = '';
       if (isSeries) {
         seriesContentId = contentId;
+        var wantedSeason = Number(season) || 0;
         return magisCall('v4/getItemData', {
           contentId: contentId, type: '0', sortType: '0', language: 'en', macAddr: '02:00:00:00:00:00',
         }, state).then(function (detail) {
-          var episodeId = magisEpisodeId(detail, Number(episode) || 0);
-          if (!episodeId) return [];
-          contentId = episodeId;
-          return magisResolve(state, contentId, seriesContentId);
+          // Flujo de temporadas (referencia kino-light-addon): el detalle trae los capítulos de UNA
+          // temporada. Al pedir el video hay que decirle al portal ESTA temporada como
+          // `seriesContentId` — si no resuelve dentro de la que le pasemos y la temporada 2
+          // terminaba reproduciendo el capítulo de la 1 (bug Ted Lasso S2E1 -> S1E1). Si la
+          // pedida no existe y el detalle no es esa temporada, SIN resultado: mejor sin stream
+          // que el capítulo de otra temporada.
+          var step = magisSeasonStep(detail, contentId, wantedSeason);
+          if (step === null) return [];
+          var detailPromise = step.refetch
+            ? magisCall('v4/getItemData', {
+                contentId: step.contentId, type: '0', sortType: '0', language: 'en', macAddr: '02:00:00:00:00:00',
+              }, state)
+            : Promise.resolve(detail);
+          seriesContentId = step.contentId;
+          return detailPromise.then(function (seasonDetail) {
+            var episodeId = magisEpisodeId(seasonDetail, Number(episode) || 0);
+            if (!episodeId) return [];
+            return magisResolve(state, episodeId, seriesContentId);
+          });
         });
       }
       return magisResolve(state, contentId, seriesContentId);

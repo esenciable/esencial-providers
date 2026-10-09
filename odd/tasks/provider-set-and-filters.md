@@ -190,3 +190,46 @@ programType y contentId siguen mandando. `node test.mjs` completo verde (exit 0)
 nombre del dist lleva cache-busting; sin bump el CDN puede servir el v4 viejo) y rebuild de
 `dist/diag-magis-v4.js` (build.cjs lo salta por estar disabled en el manifest; su dist queda con el
 núcleo viejo, pero diag no usa la selección de candidatos).
+
+## Fix 2026-10-08 (parte 2): temporadas de Magis — Ted Lasso S2E1 reproducía S1E1
+
+**Síntoma reportado por el dueño**: las series se rompían POR TEMPORADA — S1E1 bien, pero S2E1
+también reproducía S1E1. La temporada se ignoraba: todo capítulo resolvía dentro de la temporada
+del contentId que salió de la búsqueda (la T1 por el ranking por año).
+
+**Referencia replicada, no inventada**: `kino-light-addon/src/magis/provider.ts` (`episodeFor` con
+`seasonAware`, `seasonOfDetail`, `contentIdForSeason`, `episodeFrom`). El propio addon lo documenta:
+"al pedir el video hay que decirle al portal ESTA temporada como `seriesContentId`, porque si no
+resuelve dentro de la que le pasemos y la temporada 2 terminaba reproduciendo el capítulo de la 1".
+
+**Qué vive dónde**:
+- `lib/flat-magis-core.js` (helpers, probados offline por el puente de tests): `magisAssetData`,
+  `magisSeasonOfDetail` (lista de temporadas del portal; VACÍA = "es la 1", lista sin la entrada
+  propia = "no sé" -> null), `magisContentIdForSeason` (contentId de la temporada pedida) y
+  `magisSeasonStep` (la decisión: refetch al contentId de la pedida / seguir / SIN resultado).
+- `flat/magis.js` (rama de series): tras el primer `getItemData`, `magisSeasonStep` decide; si hay
+  refetch, el capítulo sale del detalle de ESA temporada y el contentId de LA TEMPORADA (no el de
+  la serie) viaja como `seriesContentId` a `v10/startPlayVOD`. Sin temporada pedida (0) o temporada
+  que ya es el detalle: igual que antes, sin llamada extra.
+
+**Verificación** (dist `magis-v6.js`, manifest bump 5.0.0 -> 6.0.0 por cache-busting):
+
+| título | antes | después |
+|---|---|---|
+| Ted Lasso S1E1 | correcto | `A1E931A8…` (E1 de T1) -> mediaId `47C947B3…`, `seriesContentId=0622324C…` (T1) |
+| Ted Lasso S2E1 | **reproducía S1E1** | refetch a T2 `58817895…` -> `DB668CE7…` (E1 de T2) -> mediaId `93E32A73…`, `seriesContentId=58817895…` (T2) — DISTINTOS |
+| Chernobyl S1E1 (una sola temporada) | correcto | igual, `9223EB70…`, sin refetch |
+| Chernobyl S2E1 (no existe) | **servía un capítulo de la 1** | **SIN streams** (ni startPlayVOD) |
+| Coco tt2380307 (control) | `8D5CCDD3…` | igual |
+
+Listas crudas del portal (descifradas del getItemData): Ted Lasso trae `sameSeasonSeriesList`
+1:0622324C… 2:58817895… 3:9ED67D4F… 4:773D5184…, y los `simpleProgramList` de T1 (E1=A1E931A8…)
+y T2 (E1=DB668CE7…) NO comparten capítulos. Chernobyl lista solo a sí misma (1:970ADDC1…).
+
+Selftest offline nuevo en `test.mjs`: 15 checks verdes de la lógica de temporadas (refetch,
+sin refetch, temporada inexistente, lista vacía con S1 ok y S2 sin resultado, lista sin entrada
+propia, seasonOfDetail/contentIdForSeason). `node test.mjs` completo verde (exit 0), casos en vivo
+de los 5 proveedores intactos; dists ≤ 42.6KB (techo ~50KB).
+
+Nota: `dist/magis-v5.js` queda huérfano en el repo (el manifest ahora apunta a `magis-v6.js`);
+eliminado aparte si procede — esta pasada no borra archivos.
